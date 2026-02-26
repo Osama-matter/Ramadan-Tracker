@@ -62,6 +62,12 @@ body {
 .moon-scene {
   position:fixed; top:24px; left:60px; z-index:10; pointer-events:none;
 }
+@media (max-width: 1400px) {
+  .moon-scene { top: 70px; left: 20px; }
+}
+@media (max-width: 1024px) {
+  .moon-scene { top: 80px; left: 10px; }
+}
 .moon-outer { width:80px; height:80px; animation:moonFloat 6s ease-in-out infinite; }
 .moon-body {
   width:80px; height:80px; border-radius:50%;
@@ -75,7 +81,7 @@ body {
 
 /* ════ LANTERNS ════ */
 .lantern-row {
-  position:fixed; top:0; left:0; right:0; z-index:9; pointer-events:none;
+  position:fixed; top:0; left:0; right:0; z-index:5; pointer-events:none;
   display:flex; justify-content:space-around; padding:0 40px;
 }
 .lantern { font-size:1.8rem; animation:lanternSway 3.5s ease-in-out infinite; transform-origin:top center; }
@@ -165,7 +171,12 @@ nav {
   font-weight: 700;
   white-space: nowrap;
 }
-.nav-links { display:flex; gap:6px; }
+  .nav-links { 
+    display:flex; 
+    gap:6px; 
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 .nav-btn {
   background:none; border:1px solid transparent; border-radius:8px;
   color:var(--ivory-mid); font-family:var(--font-body); font-size:0.88rem;
@@ -278,16 +289,16 @@ nav {
 @keyframes popIn { from{transform:scale(0.88) translateY(20px); opacity:0;} }
 .modal-close { 
   position:absolute; 
-  top:14px; 
-  right:14px; 
+  top:10px; 
+  right:10px; 
   background:rgba(196,145,42,0.2); 
-  border:1px solid rgba(196,145,42,0.4); 
-  border-radius:50%; 
-  width:36px; 
-  height:36px; 
+  border:1px solid var(--gold); 
+  border-radius:12px; 
+  width:48px; 
+  height:48px; 
   color:var(--gold-bright); 
   cursor:pointer; 
-  font-size:1.2rem; 
+  font-size:1.5rem; 
   display:flex; 
   align-items:center; 
   justify-content:center; 
@@ -296,7 +307,7 @@ nav {
 }
 .modal-close:hover {
   background:rgba(196,145,42,0.3);
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 .modal-inner { padding:28px 22px 22px; }
 .modal-head { text-align:center; margin-bottom:18px; }
@@ -339,7 +350,16 @@ nav {
 .dua-panel { background:rgba(3,5,15,0.5); border:1px solid rgba(196,145,42,0.2); border-top:none; border-radius:0 0 10px 10px; max-height:0; overflow:hidden; transition:max-height 0.4s ease, padding 0.3s; }
 .dua-panel.open { max-height:300px; padding:14px; }
 .dua-ar { font-family:var(--font-ar); font-size:1.25rem; color:var(--gold-pale); line-height:2; text-align:right; margin-bottom:10px; }
-.dua-en { font-size:0.78rem; color:var(--cream-dim); font-style:italic; line-height:1.6; direction:ltr; border-right:2px solid rgba(196,145,42,0.3); padding-right:10px; text-align:right; }
+.dua-en { 
+  font-size:0.78rem; 
+  color:var(--cream-dim); 
+  font-style:italic; 
+  line-height:1.6; 
+  direction:ltr; 
+  border-left:2px solid rgba(196,145,42,0.3); 
+  padding-left:10px; 
+  text-align:left; 
+}
 .badge-sec { padding-top:12px; border-top:1px solid var(--gold-trace); }
 .badge-title { font-family:var(--font-dec); font-size:0.5rem; letter-spacing:4px; color:var(--gold-dim); text-transform:uppercase; margin-bottom:8px; }
 .badge-chips { display:flex; flex-wrap:wrap; gap:6px; }
@@ -596,7 +616,7 @@ body.light-theme .bg-trellis { opacity: 0.04; }
 
 /* ════ THEME TOGGLE BUTTON ════ */
 #theme-toggle {
-  position: fixed; bottom: 80px; left: 20px; z-index: 500;
+  position: fixed; bottom: 80px; left: 24px; z-index: 500;
   width: 48px; height: 48px; border-radius: 50%;
   background: rgba(13,19,72,0.85); border: 1px solid rgba(196,145,42,0.4);
   color: var(--gold-bright); font-size: 1.3rem;
@@ -609,7 +629,7 @@ body.light-theme #theme-toggle { background: rgba(232,224,204,0.9); border-color
 
 /* ════ NOTIFICATION BELL ════ */
 #notif-btn {
-  position: fixed; bottom: 24px; left: 20px; z-index: 500;
+  position: fixed; bottom: 24px; left: 24px; z-index: 500;
   width: 48px; height: 48px; border-radius: 50%;
   background: rgba(13,19,72,0.85); border: 1px solid rgba(196,145,42,0.4);
   color: var(--gold-bright); font-size: 1.2rem;

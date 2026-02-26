@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="./site.css">
 <script src="./adhkar_data.js" defer></script>
 <script src="./app.js" defer></script>
+<link  rel="icon" href="./Imge/lamp.png">
 </head>
 <body>
 
@@ -64,7 +65,7 @@
     <button class="nav-btn" onclick="showSection('quran', this)">📖 ختمة القرآن</button>
     <button class="nav-btn" onclick="showSection('hadiths', this)">🌙 أحاديث رمضان</button>
     <button class="nav-btn" onclick="showSection('extra', this)">📜 أحاديث أخرى</button>
-    <button class="nav-btn" onclick="showSection('tasbeeh', this)">📿 التسبيح</button>
+    <button class="nav-btn" onclick="showSection('tasbeeh', this)">📿 التسبيح والأذكار</button>
     <button class="nav-btn" onclick="showSection('qadr', this)">⭐ العشر الأواخر</button>
     <button class="nav-btn" onclick="showSection('duacards', this)">💬 بطاقات الدعاء</button>
     <button class="nav-btn" onclick="showSection('stats', this)">📊 إحصائيات</button>
@@ -292,13 +293,12 @@
       </div>
     </div>
 
-    <!-- ADHKAR UI -->
     <div id="dhikr-adhkar-ui" style="display:none">
         <div style="display:flex;gap:10px;justify-content:center;margin-bottom:24px;flex-wrap:wrap">
           <button class="tb-tab active" id="btn-adhkar-morning" onclick="renderAdhkar('morning')">أذكار الصباح</button>
           <button class="tb-tab" id="btn-adhkar-evening" onclick="renderAdhkar('evening')">أذكار المساء</button>
           <button class="tb-tab" id="btn-adhkar-after-prayer" onclick="renderAdhkar('after_prayer')">أذكار بعد الصلاة</button>
-          <button class="tb-tab" id="btn-adhkar-general" onclick="renderAdhkar('general')">أدعية مختارة</button>
+          <button class="tb-tab" id="btn-adhkar-general" onclick="renderAdhkar('general')">أدعية عامة</button>
         </div>
       <div id="adhkar-container" style="display:grid;gap:15px"></div>
     </div>
@@ -336,7 +336,7 @@
     <div id="prayer-cards" style="display:none">
       <div style="font-family:var(--font-ar);font-size:1rem;color:var(--ivory-mid);text-align:center;margin-bottom:16px" id="prayer-date-label"></div>
       <div id="suhoor-banner" style="background:linear-gradient(135deg,rgba(13,19,72,0.9),rgba(7,13,46,0.85));border:1px solid rgba(196,145,42,0.4);border-radius:14px;padding:16px 20px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px">
-        <div><div style="font-family:var(--font-ar);font-size:0.85rem;color:var(--gold-dim);margin-bottom:4px">🌙 الإمساك / السحور</div><div style="font-family:var(--font-ar);font-size:1.8rem;color:var(--gold-bright);font-weight:700" id="imsak-time">—</div></div>
+        <div><div style="font-family:var(--font-ar);font-size:0.85rem;color:var(--gold-dim);margin-bottom:4px">🌙 الإمساك / انتهاء السحور</div><div style="font-family:var(--font-ar);font-size:1.8rem;color:var(--gold-bright);font-weight:700" id="imsak-time">—</div></div>
         <div style="text-align:left"><div style="font-family:var(--font-ar);font-size:0.85rem;color:var(--gold-dim);margin-bottom:4px">🌅 الإفطار / المغرب</div><div style="font-family:var(--font-ar);font-size:1.8rem;color:var(--gold-bright);font-weight:700" id="iftar-time">—</div></div>
       </div>
       <div style="background:rgba(196,145,42,0.07);border:1px solid rgba(196,145,42,0.2);border-radius:12px;padding:14px;text-align:center;margin-bottom:16px">
