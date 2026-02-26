@@ -6,6 +6,7 @@
 <title>رمضان كريم — موقع شامل ١٤٤٧ هـ</title>
 <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Scheherazade+New:wght@400;500;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./site.css">
+<script src="./adhkar_data.js" defer></script>
 <script src="./app.js" defer></script>
 </head>
 <body>
@@ -254,32 +255,52 @@
     <h1 class="hero-title">السبحة الإلكترونية</h1>
     <p class="hero-sub">سبّح واحمد وكبّر — اجعل ذكر الله على لسانك دائمًا</p>
   </div>
-  <div class="tasbeeh-section">
-    <div class="tasbeeh-tabs" id="tasbeeh-tabs">
-      <button class="tb-tab active" onclick="selectTasbeeh(0,this)">سبحان الله</button>
-      <button class="tb-tab" onclick="selectTasbeeh(1,this)">الحمد لله</button>
-      <button class="tb-tab" onclick="selectTasbeeh(2,this)">الله أكبر</button>
-      <button class="tb-tab" onclick="selectTasbeeh(3,this)">لا إله إلا الله</button>
-      <button class="tb-tab" onclick="selectTasbeeh(4,this)">الاستغفار</button>
-      <button class="tb-tab" onclick="selectTasbeeh(5,this)">الصلاة على النبي</button>
+  <div style="max-width:700px;margin:0 auto;padding:0 20px 50px">
+    <!-- ADHKAR TABS -->
+    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px">
+      <button class="tb-tab active" id="btn-tab-tasbeeh" onclick="switchDhikrTab('tasbeeh')">المسبحة الإلكترونية</button>
+      <button class="tb-tab" id="btn-tab-adhkar" onclick="switchDhikrTab('adhkar')">أذكار الصباح والمساء</button>
     </div>
-    <div class="tasbeeh-card" id="tasbeeh-card">
-      <div class="tasbeeh-name" id="tb-name">التسبيح</div>
-      <div class="tasbeeh-text" id="tb-text">سُبْحَانَ اللَّهِ</div>
-      <div class="counter-display" id="tb-count">0</div>
-      <div class="counter-target" id="tb-target">الهدف: ١٠٠</div>
-      <div class="ring-bar"><div class="ring-bar-fill" id="tb-bar" style="width:0%"></div></div>
-      <br>
-      <button class="tasbeeh-btn" id="tb-btn" onclick="clickTasbeeh()">+</button>
-      <div class="tasbeeh-controls">
-        <button class="tb-ctrl" onclick="resetCurrent()">إعادة ضبط</button>
-        <button class="tb-ctrl" onclick="resetAll()">مسح الكل</button>
+
+    <!-- TASBEEH UI -->
+    <div id="dhikr-tasbeeh-ui">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:20px" id="tasbeeh-tabs-row">
+        <button class="tb-tab active" onclick="selectTasbeeh(0,this)">التسبيح</button>
+        <button class="tb-tab" onclick="selectTasbeeh(1,this)">التحميد</button>
+        <button class="tb-tab" onclick="selectTasbeeh(2,this)">التكبير</button>
+        <button class="tb-tab" onclick="selectTasbeeh(3,this)">التهليل</button>
+        <button class="tb-tab" onclick="selectTasbeeh(4,this)">الاستغفار</button>
+        <button class="tb-tab" onclick="selectTasbeeh(5,this)">الصلاة على النبي</button>
+      </div>
+      <div class="tasbeeh-card" id="tasbeeh-card">
+        <div class="tasbeeh-name" id="tb-name">التسبيح</div>
+        <div class="tasbeeh-text" id="tb-text">سُبْحَانَ اللَّهِ</div>
+        <div class="counter-display" id="tb-count">0</div>
+        <div class="counter-target" id="tb-target">الهدف: ١٠٠</div>
+        <div class="ring-bar"><div class="ring-bar-fill" id="tb-bar" style="width:0%"></div></div>
+        <br>
+        <button class="tasbeeh-btn" id="tb-btn" onclick="clickTasbeeh()">+</button>
+        <div class="tasbeeh-controls">
+          <button class="tb-ctrl" onclick="resetCurrent()">إعادة ضبط</button>
+          <button class="tb-ctrl" onclick="resetAll()">مسح الكل</button>
+        </div>
+      </div>
+      <div style="background:rgba(13,19,72,0.7);border:1px solid rgba(196,145,42,0.18);border-radius:12px;padding:16px 20px;">
+        <div style="font-family:var(--font-ar);font-size:1rem;color:var(--gold-pale);margin-bottom:10px;text-align:center;">مجموع تسبيحاتك اليوم</div>
+        <div id="tasbeeh-total-display" style="font-family:var(--font-ar);font-size:2rem;color:var(--gold-bright);text-align:center;font-weight:700;"></div>
+        <div id="tasbeeh-breakdown" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px;"></div>
       </div>
     </div>
-    <div style="background:rgba(13,19,72,0.7);border:1px solid rgba(196,145,42,0.18);border-radius:12px;padding:16px 20px;">
-      <div style="font-family:var(--font-ar);font-size:1rem;color:var(--gold-pale);margin-bottom:10px;text-align:center;">مجموع تسبيحاتك اليوم</div>
-      <div id="tasbeeh-total-display" style="font-family:var(--font-ar);font-size:2rem;color:var(--gold-bright);text-align:center;font-weight:700;"></div>
-      <div id="tasbeeh-breakdown" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px;"></div>
+
+    <!-- ADHKAR UI -->
+    <div id="dhikr-adhkar-ui" style="display:none">
+        <div style="display:flex;gap:10px;justify-content:center;margin-bottom:24px;flex-wrap:wrap">
+          <button class="tb-tab active" id="btn-adhkar-morning" onclick="renderAdhkar('morning')">أذكار الصباح</button>
+          <button class="tb-tab" id="btn-adhkar-evening" onclick="renderAdhkar('evening')">أذكار المساء</button>
+          <button class="tb-tab" id="btn-adhkar-after-prayer" onclick="renderAdhkar('after_prayer')">أذكار بعد الصلاة</button>
+          <button class="tb-tab" id="btn-adhkar-general" onclick="renderAdhkar('general')">أدعية مختارة</button>
+        </div>
+      <div id="adhkar-container" style="display:grid;gap:15px"></div>
     </div>
   </div>
 </div>
@@ -456,6 +477,12 @@
       <div style="font-family:var(--font-ar);font-size:1.5rem;color:var(--gold-bright);line-height:2.1;margin-bottom:12px">اللَّهُمَّ إِنَّكَ عَفُوٌّ كَرِيمٌ<br>تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي</div>
       <div style="font-size:0.82rem;color:var(--ivory-mid)">رواه الترمذي — علّمه النبي ﷺ لعائشة رضي الله عنها</div>
       <button onclick="copyQadrDua()" style="margin-top:14px;background:rgba(196,145,42,0.15);border:1px solid rgba(196,145,42,0.3);border-radius:10px;padding:9px 20px;color:var(--gold-pale);font-family:var(--font-ar);font-size:0.9rem;cursor:pointer">📋 نسخ الدعاء</button>
+    </div>
+
+    <!-- Qadr Adhkar -->
+    <div style="margin-bottom:24px">
+      <div style="font-family:var(--font-ar);font-size:1.2rem;color:var(--gold-bright);margin-bottom:15px;text-align:center;">📿 أذكار مقترحة لليالي العشر</div>
+      <div id="qadr-adhkar-container" style="display:grid;gap:12px"></div>
     </div>
 
     <!-- Qadr detailed article & program -->

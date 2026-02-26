@@ -33,6 +33,8 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   direction: rtl;
+  /* Support for Safe Area Insets (Mobile) */
+  padding-top: calc(50px + env(safe-area-inset-top, 0px));
 }
 
 /* ════ BACKGROUNDS ════ */
@@ -81,17 +83,87 @@ body {
 .lantern:nth-child(3n) { animation-delay:-2.4s; }
 @keyframes lanternSway { 0%,100%{transform:rotate(-6deg);} 50%{transform:rotate(6deg);} }
 
+/* ════ ADHKAR CARDS ════ */
+.adhkar-card {
+  background: rgba(13, 19, 72, 0.75);
+  border: 1px solid rgba(196, 145, 42, 0.2);
+  border-radius: 16px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.adhkar-card:hover {
+  border-color: rgba(196, 145, 42, 0.4);
+  transform: translateY(-2px);
+  background: rgba(13, 19, 72, 0.85);
+}
+.adhkar-card.done {
+  border-color: #3a8a5a;
+  background: rgba(58, 138, 90, 0.1);
+}
+.adhkar-card.done .adhkar-text {
+  opacity: 0.7;
+}
+.adhkar-text {
+  font-family: var(--font-ar);
+  font-size: 1.15rem;
+  line-height: 1.8;
+  color: var(--ivory);
+  margin-bottom: 12px;
+  text-align: right;
+}
+.adhkar-hint {
+  font-family: var(--font-ar);
+  font-size: 0.9rem;
+  color: var(--gold-dim);
+  background: rgba(196, 145, 42, 0.05);
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+.adhkar-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(196, 145, 42, 0.1);
+  padding-top: 12px;
+}
+.adhkar-count {
+  font-family: var(--font-ar);
+  font-size: 1.1rem;
+  color: var(--gold-bright);
+  font-weight: bold;
+}
+.adhkar-check {
+  font-size: 1.2rem;
+}
+
 /* ════ TOP NAV ════ */
 nav {
-  position:fixed; top:0; left:0; right:0; z-index:1000;
-  background:rgba(3,5,15,0.92); backdrop-filter:blur(14px);
-  border-bottom:1px solid rgba(196,145,42,0.18);
-  display:flex; align-items:center; justify-content:space-between;
-  padding:0 20px; height:60px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: rgba(3, 5, 15, 0.95);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(196, 145, 42, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* Responsive padding for Status Bar */
+  padding: env(safe-area-inset-top, 0px) 20px 0;
+  height: calc(50px + env(safe-area-inset-top, 0px));
 }
 .nav-logo {
-  font-family:var(--font-ar); font-size:1.1rem; color:var(--gold-bright);
-  font-weight:700; white-space:nowrap;
+  font-family: var(--font-ar);
+  font-size: 0.95rem; /* Reduced from 1.1rem */
+  color: var(--gold-bright);
+  font-weight: 700;
+  white-space: nowrap;
 }
 .nav-links { display:flex; gap:6px; }
 .nav-btn {
@@ -112,12 +184,19 @@ nav {
 @media (max-width:1024px) {
   .menu-toggle { display:block; }
   .nav-links {
-    position:fixed; top:60px; left:-100%; width:260px; height:calc(100vh - 60px);
-    background:rgba(6,9,30,0.98); backdrop-filter:blur(20px);
-    flex-direction:column; padding:20px; gap:10px;
+    position:fixed; 
+    top: calc(50px + env(safe-area-inset-top, 0px)); 
+    left:-100%; width:260px; 
+    height:calc(100vh - (50px + env(safe-area-inset-top, 0px)));
+    background:rgba(6,9,30,0.98); 
+    backdrop-filter:blur(20px);
+    flex-direction:column; 
+    padding:20px; 
+    gap:10px;
     transition:0.4s cubic-bezier(0.4,0,0.2,1);
     border-right:1px solid rgba(196,145,42,0.2);
-    overflow-y:auto; z-index:999;
+    overflow-y:auto; 
+    z-index:999;
   }
   .nav-links.open { left:0; }
   .nav-btn { width:100%; text-align:right; font-size:1rem; padding:12px 15px; border-bottom:1px solid rgba(196,145,42,0.05); }

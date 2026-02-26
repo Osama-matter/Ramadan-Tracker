@@ -685,6 +685,67 @@ function resetAll() {
   tbCounts = {}; tbSave(); updateTasbeehUI();
 }
 
+let currentAdhkarType = 'morning';
+let adhkarCounts = {};
+
+function switchDhikrTab(tab) {
+  document.getElementById('dhikr-tasbeeh-ui').style.display = tab === 'tasbeeh' ? 'block' : 'none';
+  document.getElementById('dhikr-adhkar-ui').style.display = tab === 'adhkar' ? 'block' : 'none';
+  document.getElementById('btn-tab-tasbeeh').classList.toggle('active', tab === 'tasbeeh');
+  document.getElementById('btn-tab-adhkar').classList.toggle('active', tab === 'adhkar');
+  if (tab === 'adhkar') renderAdhkar(currentAdhkarType);
+}
+
+function renderAdhkar(type) {
+  currentAdhkarType = type;
+  document.getElementById('btn-adhkar-morning').classList.toggle('active', type === 'morning');
+  document.getElementById('btn-adhkar-evening').classList.toggle('active', type === 'evening');
+  const afterBtn = document.getElementById('btn-adhkar-after-prayer');
+  if (afterBtn) afterBtn.classList.toggle('active', type === 'after_prayer');
+  const generalBtn = document.getElementById('btn-adhkar-general');
+  if (generalBtn) generalBtn.classList.toggle('active', type === 'general');
+  
+  let list = MORNING_ADHKAR;
+  if (type === 'evening') list = EVENING_ADHKAR;
+  else if (type === 'after_prayer') list = AFTER_PRAYER_ADHKAR;
+  else if (type === 'general') list = GENERAL_ADHKAR;
+  
+  const container = document.getElementById('adhkar-container');
+  
+  container.innerHTML = list.map((a, idx) => {
+    const key = `${type}_${a.id}`;
+    const count = adhkarCounts[key] || 0;
+    const isDone = count >= a.count;
+    
+    return `
+      <div class="adhkar-card ${isDone ? 'done' : ''}" onclick="incrementAdhkar('${key}', ${a.count})">
+        <div class="adhkar-text">${a.text}</div>
+        ${a.hint ? `<div class="adhkar-hint">${a.hint}</div>` : ''}
+        <div class="adhkar-footer">
+          <div class="adhkar-count">${toAr(count)} / ${toAr(a.count)}</div>
+          <div class="adhkar-check">${isDone ? '✅' : '✨'}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function incrementAdhkar(key, max) {
+  if (!adhkarCounts[key]) adhkarCounts[key] = 0;
+  if (adhkarCounts[key] < max) {
+    adhkarCounts[key]++;
+    renderAdhkar(currentAdhkarType);
+    if (adhkarCounts[key] === max) {
+      toast('✅ تقبل الله منك');
+      vibrateDevice();
+    }
+  }
+}
+
+function vibrateDevice() {
+  if ("vibrate" in navigator) navigator.vibrate(50);
+}
+
 function toAr(n) {
   return n.toString().replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
 }
@@ -1339,6 +1400,7 @@ function initQadrSection() {
       s.style.cssText=`position:absolute;width:2px;height:2px;background:var(--gold-bright);border-radius:50%;opacity:${Math.random()*0.5+0.2};left:${Math.random()*100}%;top:${Math.random()*100}%;animation:shimmer ${2+Math.random()*2}s ease-in-out infinite;animation-delay:${Math.random()*3}s`;
       starsEl.appendChild(s);
     }
+  renderQadrAdhkar();
   }
 }
 
@@ -1348,6 +1410,41 @@ function toggleQadrCheck(id, el) {
   localStorage.setItem('rm47_qadr_check', JSON.stringify(stored));
   initQadrSection();
   if(stored[id]) toast('✅ بارك الله فيك!');
+}
+
+let qadrAdhkarCounts = {};
+function renderQadrAdhkar() {
+  const container = document.getElementById('qadr-adhkar-container');
+  if(!container) return;
+  
+  container.innerHTML = QADR_ADHKAR.map((a, idx) => {
+    const key = `qadr_${a.id}`;
+    const count = qadrAdhkarCounts[key] || 0;
+    const isDone = count >= a.count;
+    
+    return `
+      <div class="adhkar-card ${isDone ? 'done' : ''}" style="padding:15px; margin-bottom:0" onclick="incrementQadrAdhkar('${key}', ${a.count})">
+        <div class="adhkar-text" style="font-size:1rem; margin-bottom:8px">${a.text}</div>
+        <div class="adhkar-hint" style="font-size:0.75rem; padding:5px 10px; margin-bottom:10px">${a.hint}</div>
+        <div class="adhkar-footer" style="padding-top:8px">
+          <div class="adhkar-count" style="font-size:0.9rem">${toAr(count)} / ${toAr(a.count)}</div>
+          <div class="adhkar-check">${isDone ? '✅' : '✨'}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function incrementQadrAdhkar(key, max) {
+  if (!qadrAdhkarCounts[key]) qadrAdhkarCounts[key] = 0;
+  if (qadrAdhkarCounts[key] < max) {
+    qadrAdhkarCounts[key]++;
+    renderQadrAdhkar();
+    if (qadrAdhkarCounts[key] === max) {
+      toast('✅ تقبل الله منك في هذه الليالي المباركة');
+      if ("vibrate" in navigator) navigator.vibrate(50);
+    }
+  }
 }
 
 function copyQadrDua() {
