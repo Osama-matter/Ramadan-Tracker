@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>رمضان كريم — موقع شامل ١٤٤٧ هـ</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Scheherazade+New:wght@400;500;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./site.css">
+<script src="./app.js" defer></script>
+</head>
+<body>
+
+
+<!-- THEME TOGGLE -->
+<button id="theme-toggle" onclick="toggleTheme()" title="تغيير الثيم">🌙</button>
+
+<!-- NOTIFICATION BELL -->
+<div style="position:fixed;bottom:24px;left:20px;z-index:500">
+  <button id="notif-btn" onclick="toggleNotifPanel()" title="التنبيهات" style="position:relative;width:48px;height:48px;border-radius:50%;background:rgba(13,19,72,0.85);border:1px solid rgba(196,145,42,0.4);color:var(--gold-bright);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.4);transition:var(--tr);backdrop-filter:blur(8px)">
+    🔔<span id="notif-badge" style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:#e84040;border-radius:50%;font-size:0.55rem;display:none;align-items:center;justify-content:center;color:#fff">!</span>
+  </button>
+</div>
+
+<!-- NOTIFICATION PANEL -->
+<div id="notif-panel">
+  <div class="np-title">🔔 إعدادات التنبيهات</div>
+  <div class="np-row"><span class="np-label">🌙 تنبيه السحور (قبل ٣٠ دقيقة)</span><div class="np-toggle" id="notif-suhoor" onclick="toggleNotif('suhoor')"></div></div>
+  <div class="np-row"><span class="np-label">🌅 تنبيه الإفطار (عند الأذان)</span><div class="np-toggle" id="notif-iftar" onclick="toggleNotif('iftar')"></div></div>
+  <div class="np-row"><span class="np-label">📖 تذكير التلاوة اليومية</span><div class="np-toggle" id="notif-quran" onclick="toggleNotif('quran_remind')"></div></div>
+  <div class="np-row"><span class="np-label">⭐ تنبيه العشر الأواخر</span><div class="np-toggle" id="notif-qadr" onclick="toggleNotif('qadr_remind')"></div></div>
+  <div style="margin-top:12px;font-size:0.72rem;color:var(--gold-dim);text-align:center;font-family:var(--font-body)">التنبيهات تعمل عند فتح الصفحة فقط</div>
+</div>
+
+<canvas id="sky-canvas"></canvas>
+<div class="bg-trellis"></div>
+<div class="bg-vignette"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<div class="moon-scene">
+  <div class="moon-outer">
+    <div class="moon-body"><span class="moon-star">★</span></div>
+  </div>
+</div>
+
+<div class="lantern-row">
+  <div class="lantern">🏮</div><div class="lantern">🏮</div><div class="lantern">🏮</div>
+  <div class="lantern">🏮</div><div class="lantern">🏮</div><div class="lantern">🏮</div>
+</div>
+
+<div id="toasts"></div>
+
+<!-- NAV -->
+<nav>
+  <button class="menu-toggle" id="menu-toggle" onclick="toggleMenu()" aria-label="القائمة">☰</button>
+  <div class="nav-logo">رمضان كريم ١٤٤٧</div>
+  <div class="nav-links-overlay" id="nav-overlay" onclick="toggleMenu()"></div>
+  <div class="nav-links" id="nav-links">
+    <button class="nav-btn active" onclick="showSection('tracker', this)">📅 متابعة رمضان</button>
+    <button class="nav-btn" onclick="showSection('prayer', this)">🕌 مواقيت الصلاة</button>
+    <button class="nav-btn" onclick="showSection('goals', this)">🎯 أهدافي</button>
+    <button class="nav-btn" onclick="showSection('quran', this)">📖 ختمة القرآن</button>
+    <button class="nav-btn" onclick="showSection('hadiths', this)">🌙 أحاديث رمضان</button>
+    <button class="nav-btn" onclick="showSection('extra', this)">📜 أحاديث أخرى</button>
+    <button class="nav-btn" onclick="showSection('tasbeeh', this)">📿 التسبيح</button>
+    <button class="nav-btn" onclick="showSection('qadr', this)">⭐ العشر الأواخر</button>
+    <button class="nav-btn" onclick="showSection('duacards', this)">💬 بطاقات الدعاء</button>
+    <button class="nav-btn" onclick="showSection('stats', this)">📊 إحصائيات</button>
+  </div>
+</nav>
+
+<!-- TRACKER MODAL -->
+<div class="overlay" id="overlay" role="dialog">
+  <div class="modal">
+    <button class="modal-close" id="modal-close-btn">✕</button>
+    <div class="modal-inner">
+      <div class="modal-head">
+        <div class="m-day-num" id="m-day-num">اليوم ١ من رمضان</div>
+        <div class="m-date" id="m-date">—</div>
+        <div class="m-ar" id="m-ar">١ رمضان</div>
+      </div>
+      <div class="modal-ring-row">
+        <div class="modal-ring-wrap" id="m-ring-wrap">
+          <div class="modal-ring-inner">
+            <span class="m-ring-pct" id="m-pct">0%</span>
+            <span class="m-ring-lbl">مكتمل</span>
+          </div>
+        </div>
+      </div>
+      <div class="tasks" id="m-tasks"></div>
+      <div class="dua-accordion">
+        <button class="dua-btn" id="dua-btn" onclick="toggleDua()">
+          <span class="arr">▾</span>دعاء اليوم <span>📿</span>
+        </button>
+        <div class="dua-panel" id="dua-panel">
+          <div class="dua-ar" id="dua-ar"></div>
+          <div class="dua-en" id="dua-en"></div>
+        </div>
+      </div>
+      <div class="badge-sec" id="badge-sec" style="display:none">
+        <div class="badge-title">ما اكتسبته اليوم</div>
+        <div class="badge-chips" id="badge-chips"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- ════ SECTION: TRACKER ════ -->
+<div id="section-tracker" class="section active">
+  <div class="hero hadith-hero">
+    <div class="orn-rule"><div class="orn-line flip"></div><div class="orn-diamond"></div><div class="orn-star">✦</div><div class="orn-diamond"></div><div class="orn-line"></div></div>
+    <p class="hero-eyebrow">شهر رمضان المبارك</p>
+    <h1 class="hero-title">رمضان كريم</h1>
+    <p class="hero-sub">تابع عباداتك اليومية — كل يوم خطوة نحو الله</p>
+    <p class="latin-heading" style="display:none">Ramadan 1447H</p>
+    <div class="stats-row">
+      <div class="stat-pill"><div class="sp-label">اليوم</div><div class="sp-value" id="stat-today">—</div></div>
+      <div class="stat-pill"><div class="sp-label">اليوم الحالي</div><div class="sp-value" id="stat-day">—</div></div>
+      <div class="stat-pill"><div class="sp-label">أيام متبقية</div><div class="sp-value" id="stat-left">—</div></div>
+      <div class="stat-pill"><div class="sp-label">المهام المنجزة</div><div class="sp-value" id="stat-done">—</div></div>
+    </div>
+  </div>
+
+  <div class="ring-section">
+    <div class="sec-title">التقدم الكلي في رمضان</div>
+    <div class="ring-wrap">
+      <svg width="180" height="180" viewBox="0 0 180 180">
+        <defs>
+          <linearGradient id="mainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#f0c84a"/><stop offset="100%" stop-color="#6b5015"/>
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <circle cx="90" cy="90" r="78" fill="none" stroke="rgba(196,145,42,0.1)" stroke-width="9"/>
+        <circle cx="90" cy="90" r="78" fill="none" stroke="url(#mainGrad)" stroke-width="9"
+          stroke-linecap="round" filter="url(#glow)"
+          stroke-dasharray="490.09" stroke-dashoffset="490.09" id="overall-ring"
+          style="transition:stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1); transform:rotate(-90deg); transform-origin:50% 50%;"/>
+      </svg>
+      <div class="ring-inner">
+        <span class="ring-pct" id="overall-pct">0%</span>
+        <span class="ring-sub">مكتمل</span>
+      </div>
+    </div>
+    <div class="ring-caption" id="ring-caption">ابدأ رحلتك المباركة</div>
+  </div>
+
+  <div class="cal-header">
+    <span class="sec-title">✦ الأيام الثلاثون</span>
+    <div class="h-line"></div>
+    <span class="sec-title">رمضان ١٤٤٧ هـ ✦</span>
+  </div>
+  <div class="calendar" id="calendar"></div>
+</div>
+
+<!-- ════ SECTION: HADITHS ════ -->
+<div id="section-hadiths" class="section">
+  <div class="hero hadith-hero">
+    <div class="orn-rule"><div class="orn-line flip"></div><div class="orn-diamond"></div><div class="orn-star">✦</div><div class="orn-diamond"></div><div class="orn-line"></div></div>
+    <p class="hero-eyebrow">شهر رمضان المبارك</p>
+    <h1 class="hero-title">أحاديث نبوية عن رمضان</h1>
+    <p class="hero-sub">اقرأ، تأمّل، واحفظ — كلام النبي ﷺ نور يضيء قلوبنا</p>
+  </div>
+  <div class="stats-bar" id="h-stats-bar">
+    <div class="stat-chip">📖 الأحاديث: <strong id="stat-total">0</strong></div>
+    <div class="stat-chip">✅ المقروءة: <strong id="stat-read">0</strong></div>
+    <div class="stat-chip">❤️ المحفوظة: <strong id="stat-fav">0</strong></div>
+    <div class="stat-chip">📅 حديث اليوم: <strong id="stat-day-num">—</strong></div>
+  </div>
+  <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+
+  <div class="daily-section">
+    <div class="section-label"><span>⭐ حديث اليوم</span></div>
+    <div class="spotlight" id="spotlight" onclick="toggleSpotlightExplanation()">
+      <div class="corner-orn">❖</div>
+      <div class="spot-badge" id="spot-badge">🌙 حديث اليوم</div>
+      <p class="spot-hadith" id="spot-text">جاري التحميل…</p>
+      <div class="spot-meta">
+        <div class="spot-source" id="spot-source">—</div>
+        <div class="spot-narrator" id="spot-narrator">—</div>
+      </div>
+      <div class="spot-explanation" id="spot-explanation"></div>
+      <div class="spot-toggle-hint" id="spot-hint">انقر للاطلاع على شرح الحديث ▾</div>
+      <div class="spot-actions" onclick="event.stopPropagation()">
+        <button class="btn btn-gold" onclick="randomHadith()">🔀 حديث عشوائي</button>
+        <button class="btn btn-outline" id="spot-fav-btn" onclick="toggleSpotFav()">♡ المفضلة</button>
+        <button class="btn btn-ghost" id="spot-read-btn" onclick="toggleSpotRead()">☐ قرأتُه</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div>
+      <div class="filter-label">التصفية:</div>
+      <div class="filter-tabs" id="filter-tabs">
+        <button class="filter-tab active" data-filter="all" onclick="filterCards('all',this)">الكل</button>
+        <button class="filter-tab" data-filter="حديث نبوي" onclick="filterCards('حديث نبوي',this)">🌙 عام</button>
+        <button class="filter-tab" data-filter="فضل الصيام" onclick="filterCards('فضل الصيام',this)">✨ فضل الصيام</button>
+        <button class="filter-tab" data-filter="فضل السحور" onclick="filterCards('فضل السحور',this)">🌟 السحور</button>
+        <button class="filter-tab" data-filter="ليلة القدر" onclick="filterCards('ليلة القدر',this)">⭐ ليلة القدر</button>
+        <button class="filter-tab" data-filter="الإفطار والدعاء" onclick="filterCards('الإفطار والدعاء',this)">🌅 الإفطار</button>
+        <button class="filter-tab" data-filter="التراويح والقيام" onclick="filterCards('التراويح والقيام',this)">🕌 التراويح</button>
+        <button class="filter-tab" data-filter="الزكاة والصدقة" onclick="filterCards('الزكاة والصدقة',this)">💛 الصدقة</button>
+        <button class="filter-tab" data-filter="أخلاق الصائم" onclick="filterCards('أخلاق الصائم',this)">👁️ الأخلاق</button>
+        <button class="filter-tab" data-filter="القرآن والذكر" onclick="filterCards('القرآن والذكر',this)">📖 القرآن</button>
+        <button class="filter-tab" data-filter="الاعتكاف" onclick="filterCards('الاعتكاف',this)">🏠 الاعتكاف</button>
+        <button class="filter-tab" data-filter="الاستغفار والتوبة" onclick="filterCards('الاستغفار والتوبة',this)">🙏 التوبة</button>
+        <button class="filter-tab" data-filter="صيام رمضان" onclick="filterCards('صيام رمضان',this)">📅 أحكام</button>
+        <button class="filter-tab" data-filter="fav" onclick="filterCards('fav',this)">❤️ المفضلة</button>
+        <button class="filter-tab" data-filter="read" onclick="filterCards('read',this)">✅ المقروءة</button>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <input type="text" class="search-input" id="search-input" placeholder="ابحث في الأحاديث…" oninput="searchCards(this.value)">
+      <span class="search-icon">🔍</span>
+    </div>
+  </div>
+
+  <div class="hadith-grid" id="hadith-grid"></div>
+  <div class="empty-state" id="empty-state">
+    <div class="icon">🔍</div>
+    <p>لا توجد نتائج تطابق بحثك</p>
+  </div>
+  <div class="favorites-section" id="favorites-section">
+    <div class="divider"><span>❤️ الأحاديث المحفوظة</span></div>
+    <div class="hadith-grid" id="fav-grid"></div>
+  </div>
+</div>
+
+<!-- ════ SECTION: EXTRA HADITHS ════ -->
+<div id="section-extra" class="section">
+  <div class="hero hadith-hero">
+    <div class="orn-rule"><div class="orn-line flip"></div><div class="orn-diamond"></div><div class="orn-star">✦</div><div class="orn-diamond"></div><div class="orn-line"></div></div>
+    <p class="hero-eyebrow">من الهدي النبوي الشريف</p>
+    <h1 class="hero-title">أحاديث في السلوك والعبادة</h1>
+    <p class="hero-sub">أحاديث نبوية في مختلف أبواب الحياة — تزاد في هذا الشهر الفضيل</p>
+  </div>
+  <div class="text-hadith-section">
+    <div id="extra-hadith-container"></div>
+  </div>
+</div>
+
+<!-- ════ SECTION: TASBEEH ════ -->
+<div id="section-tasbeeh" class="section">
+  <div class="hero hadith-hero">
+    <div class="orn-rule"><div class="orn-line flip"></div><div class="orn-diamond"></div><div class="orn-star">✦</div><div class="orn-diamond"></div><div class="orn-line"></div></div>
+    <p class="hero-eyebrow">ذكر الله</p>
+    <h1 class="hero-title">السبحة الإلكترونية</h1>
+    <p class="hero-sub">سبّح واحمد وكبّر — اجعل ذكر الله على لسانك دائمًا</p>
+  </div>
+  <div class="tasbeeh-section">
+    <div class="tasbeeh-tabs" id="tasbeeh-tabs">
+      <button class="tb-tab active" onclick="selectTasbeeh(0,this)">سبحان الله</button>
+      <button class="tb-tab" onclick="selectTasbeeh(1,this)">الحمد لله</button>
+      <button class="tb-tab" onclick="selectTasbeeh(2,this)">الله أكبر</button>
+      <button class="tb-tab" onclick="selectTasbeeh(3,this)">لا إله إلا الله</button>
+      <button class="tb-tab" onclick="selectTasbeeh(4,this)">الاستغفار</button>
+      <button class="tb-tab" onclick="selectTasbeeh(5,this)">الصلاة على النبي</button>
+    </div>
+    <div class="tasbeeh-card" id="tasbeeh-card">
+      <div class="tasbeeh-name" id="tb-name">التسبيح</div>
+      <div class="tasbeeh-text" id="tb-text">سُبْحَانَ اللَّهِ</div>
+      <div class="counter-display" id="tb-count">0</div>
+      <div class="counter-target" id="tb-target">الهدف: ١٠٠</div>
+      <div class="ring-bar"><div class="ring-bar-fill" id="tb-bar" style="width:0%"></div></div>
+      <br>
+      <button class="tasbeeh-btn" id="tb-btn" onclick="clickTasbeeh()">+</button>
+      <div class="tasbeeh-controls">
+        <button class="tb-ctrl" onclick="resetCurrent()">إعادة ضبط</button>
+        <button class="tb-ctrl" onclick="resetAll()">مسح الكل</button>
+      </div>
+    </div>
+    <div style="background:rgba(13,19,72,0.7);border:1px solid rgba(196,145,42,0.18);border-radius:12px;padding:16px 20px;">
+      <div style="font-family:var(--font-ar);font-size:1rem;color:var(--gold-pale);margin-bottom:10px;text-align:center;">مجموع تسبيحاتك اليوم</div>
+      <div id="tasbeeh-total-display" style="font-family:var(--font-ar);font-size:2rem;color:var(--gold-bright);text-align:center;font-weight:700;"></div>
+      <div id="tasbeeh-breakdown" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ SECTION: PRAYER TIMES ════ -->
+<div id="section-prayer" class="section">
+  <div class="hero hadith-hero">
+    <div class="orn-rule"><div class="orn-line flip"></div><div class="orn-diamond"></div><div class="orn-star">✦</div><div class="orn-diamond"></div><div class="orn-line"></div></div>
+    <p class="hero-eyebrow">مواقيت الصلاة</p>
+    <h1 class="hero-title">أوقات الصلاة والإمساك</h1>
+    <p class="hero-sub">أدخل مدينتك لعرض مواقيت الصلاة اليوم</p>
+  </div>
+  <div style="max-width:600px;margin:0 auto;padding:0 20px 50px">
+    <div style="background:rgba(13,19,72,0.8);border:1px solid rgba(196,145,42,0.3);border-radius:16px;padding:22px;margin-bottom:20px;">
+      <div style="font-family:var(--font-ar);font-size:1rem;color:var(--gold-pale);margin-bottom:14px;text-align:center;">اختر بلدك ومدينتك</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <select id="prayer-country" onchange="updateCities()" style="flex:1;min-width:130px;background:rgba(3,5,15,0.8);border:1px solid rgba(196,145,42,0.3);border-radius:10px;padding:10px 12px;color:var(--ivory);font-family:var(--font-ar);font-size:0.95rem;outline:none;cursor:pointer">
+          <option value="EG">مصر</option><option value="SA">السعودية</option><option value="AE">الإمارات</option>
+          <option value="KW">الكويت</option><option value="QA">قطر</option><option value="BH">البحرين</option>
+          <option value="OM">عُمان</option><option value="YE">اليمن</option><option value="IQ">العراق</option>
+          <option value="SY">سوريا</option><option value="JO">الأردن</option><option value="LB">لبنان</option>
+          <option value="LY">ليبيا</option><option value="TN">تونس</option><option value="DZ">الجزائر</option>
+          <option value="MA">المغرب</option><option value="SD">السودان</option><option value="PS">فلسطين</option>
+          <option value="TR">تركيا</option><option value="GB">المملكة المتحدة</option><option value="US">أمريكا</option>
+          <option value="DE">ألمانيا</option><option value="FR">فرنسا</option>
+        </select>
+        <select id="prayer-city" style="flex:1;min-width:130px;background:rgba(3,5,15,0.8);border:1px solid rgba(196,145,42,0.3);border-radius:10px;padding:10px 12px;color:var(--ivory);font-family:var(--font-ar);font-size:0.95rem;outline:none;cursor:pointer">
+          <option value="Cairo">القاهرة</option>
+        </select>
+        <button onclick="fetchPrayerTimes()" style="background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:10px;padding:10px 20px;color:var(--ink);font-family:var(--font-ar);font-size:0.95rem;font-weight:700;cursor:pointer;white-space:nowrap">عرض</button>
+      </div>
+    </div>
+    <div id="prayer-cards" style="display:none">
+      <div style="font-family:var(--font-ar);font-size:1rem;color:var(--ivory-mid);text-align:center;margin-bottom:16px" id="prayer-date-label"></div>
+      <div id="suhoor-banner" style="background:linear-gradient(135deg,rgba(13,19,72,0.9),rgba(7,13,46,0.85));border:1px solid rgba(196,145,42,0.4);border-radius:14px;padding:16px 20px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div><div style="font-family:var(--font-ar);font-size:0.85rem;color:var(--gold-dim);margin-bottom:4px">🌙 الإمساك / السحور</div><div style="font-family:var(--font-ar);font-size:1.8rem;color:var(--gold-bright);font-weight:700" id="imsak-time">—</div></div>
+        <div style="text-align:left"><div style="font-family:var(--font-ar);font-size:0.85rem;color:var(--gold-dim);margin-bottom:4px">🌅 الإفطار / المغرب</div><div style="font-family:var(--font-ar);font-size:1.8rem;color:var(--gold-bright);font-weight:700" id="iftar-time">—</div></div>
+      </div>
+      <div style="background:rgba(196,145,42,0.07);border:1px solid rgba(196,145,42,0.2);border-radius:12px;padding:14px;text-align:center;margin-bottom:16px">
+        <div style="font-size:0.78rem;color:var(--gold-dim);font-family:var(--font-dec);letter-spacing:3px;text-transform:uppercase;margin-bottom:6px" id="countdown-label">الوقت المتبقي</div>
+        <div style="font-family:var(--font-ar);font-size:2.2rem;color:var(--gold-pale);font-weight:700" id="prayer-countdown">—</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="prayer-grid"></div>
+    </div>
+    <div id="prayer-loading" style="text-align:center;color:var(--ivory-mid);padding:40px;display:none">
+      <div style="font-size:2rem;animation:starPulse 1s ease-in-out infinite">🌙</div>
+      <div style="margin-top:10px;font-family:var(--font-ar)">جاري التحميل…</div>
+    </div>
+    <div id="prayer-error" style="text-align:center;color:#f08090;padding:20px;display:none;font-family:var(--font-ar)"></div>
+  </div>
+</div>
+
+<!-- ════ SECTION: GOALS ════ -->
+<div id="section-goals" class="section">
+  <div class="hero hadith-hero">
+    <div class="orn-rule"><div class="orn-line flip"></div><div class="orn-diamond"></div><div class="orn-star">✦</div><div class="orn-diamond"></div><div class="orn-line"></div></div>
+    <p class="hero-eyebrow">رمضان ١٤٤٧ هـ</p>
+    <h1 class="hero-title">أهدافي في رمضان</h1>
+    <p class="hero-sub">ضع أهدافك الشخصية وتابع تقدمك يومًا بيوم</p>
+  </div>
+  <div style="max-width:700px;margin:0 auto;padding:0 20px 50px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:24px" id="goals-stats-grid"></div>
+    <div style="background:rgba(13,19,72,0.8);border:1px solid rgba(196,145,42,0.3);border-radius:16px;padding:20px;margin-bottom:20px">
+      <div style="font-family:var(--font-ar);font-size:1rem;color:var(--gold-pale);margin-bottom:14px">✨ أضف هدفًا جديدًا</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <input id="goal-name" type="text" placeholder="مثال: أختم القرآن، أتصدق كل يوم…" style="background:rgba(3,5,15,0.7);border:1px solid rgba(196,145,42,0.25);border-radius:10px;padding:11px 14px;color:var(--ivory);font-family:var(--font-ar);font-size:0.95rem;outline:none;text-align:right" dir="rtl">
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <select id="goal-icon" style="background:rgba(3,5,15,0.7);border:1px solid rgba(196,145,42,0.25);border-radius:10px;padding:10px 12px;color:var(--ivory);font-family:var(--font-ar);outline:none;cursor:pointer">
+            <option>🌙</option><option>📖</option><option>🤲</option><option>💛</option><option>🕌</option><option>⭐</option><option>📿</option><option>🏃</option><option>💧</option><option>🌱</option>
+          </select>
+          <select id="goal-type" style="flex:1;background:rgba(3,5,15,0.7);border:1px solid rgba(196,145,42,0.25);border-radius:10px;padding:10px 12px;color:var(--ivory);font-family:var(--font-ar);outline:none;cursor:pointer">
+            <option value="daily">يومي (٣٠ يوم)</option>
+            <option value="count">عدد مرات</option>
+            <option value="once">مرة واحدة</option>
+          </select>
+          <input id="goal-target" type="number" placeholder="الهدف" min="1" value="30" style="width:90px;background:rgba(3,5,15,0.7);border:1px solid rgba(196,145,42,0.25);border-radius:10px;padding:10px 12px;color:var(--ivory);font-family:var(--font-ar);outline:none;text-align:center">
+        </div>
+        <button onclick="addGoal()" style="background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:10px;padding:12px;color:var(--ink);font-family:var(--font-ar);font-size:1rem;font-weight:700;cursor:pointer">+ إضافة الهدف</button>
+      </div>
+    </div>
+    <div id="goals-list"></div>
+    <div style="background:rgba(13,19,72,0.7);border:1px solid rgba(196,145,42,0.2);border-radius:14px;padding:20px;margin-top:24px">
+      <div style="font-family:var(--font-ar);font-size:1.1rem;color:var(--gold-bright);margin-bottom:14px;text-align:center">📊 تقرير رمضانك</div>
+      <div id="ramadan-report" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ SECTION: QURAN KHATMA ════ -->
+<div id="section-quran" class="section">
+  <div class="hero hadith-hero">
+    <div class="orn-rule"><div class="orn-line flip"></div><div class="orn-diamond"></div><div class="orn-star">✦</div><div class="orn-diamond"></div><div class="orn-line"></div></div>
+    <p class="hero-eyebrow">كتاب الله العزيز</p>
+    <h1 class="hero-title">ختمة القرآن الكريم</h1>
+    <p class="hero-sub">تابع تلاوتك اليومية — اختم القرآن في رمضان</p>
+  </div>
+  <div style="max-width:700px;margin:0 auto;padding:0 20px 50px">
+    <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:28px">
+      <div style="position:relative;width:160px;height:160px">
+        <svg width="160" height="160" viewBox="0 0 160 160">
+          <defs><linearGradient id="qGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f0c84a"/><stop offset="100%" stop-color="#4a8a3a"/></linearGradient></defs>
+          <circle cx="80" cy="80" r="68" fill="none" stroke="rgba(196,145,42,0.1)" stroke-width="8"/>
+          <circle cx="80" cy="80" r="68" fill="none" stroke="url(#qGrad)" stroke-width="8"
+            stroke-linecap="round" stroke-dasharray="427.26" stroke-dashoffset="427.26" id="quran-ring"
+            style="transition:stroke-dashoffset 1s ease;transform:rotate(-90deg);transform-origin:50% 50%"/>
+        </svg>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div style="font-family:var(--font-ar);font-size:1.9rem;color:var(--gold-pale);font-weight:700" id="quran-pct-display">0%</div>
+          <div style="font-size:0.65rem;color:var(--gold-dim);font-family:var(--font-dec);letter-spacing:2px;text-transform:uppercase">مكتمل</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font-family:var(--font-ar);font-size:0.9rem;color:var(--ivory-mid)" id="quran-pages-done">٠ / ٦٠٤ صفحة</div>
+    </div>
+    <div style="background:rgba(13,19,72,0.8);border:1px solid rgba(196,145,42,0.3);border-radius:14px;padding:18px;margin-bottom:18px">
+      <div style="font-family:var(--font-ar);font-size:0.95rem;color:var(--gold-pale);margin-bottom:12px">⚙️ إعداد الختمة</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <label style="font-family:var(--font-ar);font-size:0.9rem;color:var(--ivory-mid)">عدد الختمات:</label>
+        <select id="khatma-count" onchange="updateQuranGoal()" style="background:rgba(3,5,15,0.7);border:1px solid rgba(196,145,42,0.25);border-radius:8px;padding:8px 12px;color:var(--ivory);font-family:var(--font-ar);outline:none;cursor:pointer">
+          <option value="1">ختمة واحدة (٢٠ ص/يوم)</option>
+          <option value="2">ختمتان (٤٠ ص/يوم)</option>
+          <option value="3">٣ ختمات (٦٠ ص/يوم)</option>
+        </select>
+      </div>
+      <div style="margin-top:10px;font-family:var(--font-ar);font-size:0.85rem;color:var(--ivory-soft)" id="quran-daily-target"></div>
+    </div>
+    <div style="background:rgba(13,19,72,0.75);border:1px solid rgba(196,145,42,0.22);border-radius:14px;padding:18px;margin-bottom:18px">
+      <div style="font-family:var(--font-ar);font-size:0.95rem;color:var(--gold-pale);margin-bottom:12px">📝 سجّل تلاوة اليوم</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <input type="number" id="quran-pages-input" placeholder="عدد الصفحات" min="0" max="604" style="flex:1;min-width:120px;background:rgba(3,5,15,0.7);border:1px solid rgba(196,145,42,0.25);border-radius:10px;padding:10px 12px;color:var(--ivory);font-family:var(--font-ar);font-size:1rem;outline:none;text-align:center">
+        <button onclick="logQuranPages()" style="background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:none;border-radius:10px;padding:11px 22px;color:var(--ink);font-family:var(--font-ar);font-size:0.95rem;font-weight:700;cursor:pointer;white-space:nowrap">تسجيل ✓</button>
+      </div>
+      <div style="margin-top:10px;font-family:var(--font-ar);font-size:0.85rem;color:var(--ivory-soft)" id="quran-today-logged"></div>
+    </div>
+    <div style="font-family:var(--font-dec);font-size:0.58rem;letter-spacing:3px;color:var(--gold-dim);text-transform:uppercase;text-align:center;margin-bottom:12px">تقدم الأيام الثلاثين</div>
+    <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:20px" id="quran-days-grid"></div>
+    <div style="background:rgba(13,19,72,0.6);border:1px solid rgba(196,145,42,0.15);border-radius:14px;padding:16px">
+      <div style="font-family:var(--font-ar);font-size:0.95rem;color:var(--gold-pale);margin-bottom:12px;text-align:center">📋 الجزء اليومي المقترح</div>
+      <div id="quran-schedule" style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════ SECTION: LAYLAT AL QADR ════ -->
+<div id="section-qadr" class="section">
+  <div class="hero hadith-hero">
+    <div class="orn-rule"><div class="orn-line flip"></div><div class="orn-diamond"></div><div class="orn-star">✦</div><div class="orn-diamond"></div><div class="orn-line"></div></div>
+    <p class="hero-eyebrow">أفضل ليالي العام</p>
+    <h1 class="hero-title">ليلة القدر والعشر الأواخر</h1>
+    <p class="hero-sub">خيرٌ من ألف شهر — لا تُفوّت هذه الليالي المباركة</p>
+  </div>
+  <div style="max-width:600px;margin:0 auto;padding:0 20px 50px">
+
+    <!-- Countdown to last 10 -->
+    <div class="qadr-widget" id="qadr-widget">
+      <div class="qadr-stars-bg" id="qadr-stars"></div>
+      <div style="font-size:2rem;margin-bottom:8px">⭐</div>
+      <div class="qadr-title">العشر الأواخر من رمضان</div>
+      <div class="qadr-sub">من ٢١ إلى ٣٠ رمضان (١٢ مارس – ١٩ مارس ٢٠٢٦)</div>
+      <div style="font-family:var(--font-ar);font-size:0.95rem;color:var(--ivory-mid);margin-bottom:16px" id="qadr-days-left"></div>
+      <div class="qadr-nights" id="qadr-nights-grid"></div>
+      <div class="qadr-special">«تَحَرَّوْا لَيْلَةَ الْقَدْرِ فِي الْوِتْرِ مِنَ الْعَشْرِ الأَوَاخِرِ مِنْ رَمَضَانَ»</div>
+    </div>
+
+    <!-- Odd nights highlight -->
+    <div style="background:rgba(13,19,72,0.75);border:1px solid rgba(196,145,42,0.25);border-radius:14px;padding:18px;margin-bottom:16px">
+      <div style="font-family:var(--font-ar);font-size:1rem;color:var(--gold-bright);margin-bottom:14px;text-align:center">🌙 الليالي الوتر المُرشَّحة لليلة القدر</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px" id="odd-nights-grid"></div>
+    </div>
+
+    <!-- Dua of Laylat al Qadr -->
+    <div style="background:linear-gradient(135deg,rgba(30,0,80,0.8),rgba(13,19,72,0.85));border:1px solid rgba(196,145,42,0.45);border-radius:16px;padding:22px;text-align:center;margin-bottom:16px">
+      <div style="font-family:var(--font-dec);font-size:0.58rem;letter-spacing:4px;color:var(--gold-dim);text-transform:uppercase;margin-bottom:12px">دعاء ليلة القدر المأثور</div>
+      <div style="font-family:var(--font-ar);font-size:1.5rem;color:var(--gold-bright);line-height:2.1;margin-bottom:12px">اللَّهُمَّ إِنَّكَ عَفُوٌّ كَرِيمٌ<br>تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي</div>
+      <div style="font-size:0.82rem;color:var(--ivory-mid)">رواه الترمذي — علّمه النبي ﷺ لعائشة رضي الله عنها</div>
+      <button onclick="copyQadrDua()" style="margin-top:14px;background:rgba(196,145,42,0.15);border:1px solid rgba(196,145,42,0.3);border-radius:10px;padding:9px 20px;color:var(--gold-pale);font-family:var(--font-ar);font-size:0.9rem;cursor:pointer">📋 نسخ الدعاء</button>
+    </div>
+
+    <!-- Qadr detailed article & program -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px;">
+      <button class="qadr-article-btn" style="margin-top:0;" onclick="openQadrArticle()">
+        📖 فوائد العشر الأواخر
+      </button>
+      <button class="qadr-article-btn" style="margin-top:0;" onclick="openQadrSchedule()">
+        📅 الجدول اليومي المقترح
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ARTICLE MODAL -->
+<div class="overlay" id="article-overlay" role="dialog">
+  <div class="modal article-modal">
+    <button class="modal-close" onclick="closeArticleModal()">✕</button>
+    <div class="modal-inner">
+      <div class="modal-head">
+        <div class="m-day-num">دليل العبادة</div>
+        <div class="m-ar">العشر الأواخر من رمضان</div>
+      </div>
+      <div class="article-content" id="article-body">
+        <!-- Content will be injected by JS -->
+      </div>
+      <button class="btn btn-gold" style="width:100%; margin-top:20px;" onclick="closeArticleModal()">فهمت، بارك الله فيكم</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ SECTION: DUA CARDS ════ -->
+<div id="section-duacards" class="section">
+  <div class="hero hadith-hero">
+    <div class="orn-rule"><div class="orn-line flip"></div><div class="orn-diamond"></div><div class="orn-star">✦</div><div class="orn-diamond"></div><div class="orn-line"></div></div>
+    <p class="hero-eyebrow">تقرّب إلى الله</p>
+    <h1 class="hero-title">بطاقات الأدعية المباركة</h1>
+    <p class="hero-sub">أدعية مأثورة للصائم — انسخها وشاركها مع أحبابك</p>
+  </div>
+
+  <!-- Category filter -->
+  <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:0 20px 20px;max-width:900px;margin:0 auto" id="dua-filter-row">
+    <button class="filter-tab active" onclick="filterDuaCards('all',this)">الكل</button>
+    <button class="filter-tab" onclick="filterDuaCards('صباح',this)">🌅 الصباح والمساء</button>
+    <button class="filter-tab" onclick="filterDuaCards('إفطار',this)">🌙 الإفطار والسحور</button>
+    <button class="filter-tab" onclick="filterDuaCards('قرآن',this)">📖 ما قبل التلاوة</button>
+    <button class="filter-tab" onclick="filterDuaCards('نوم',this)">😴 النوم والاستيقاظ</button>
+    <button class="filter-tab" onclick="filterDuaCards('جامع',this)">✨ أدعية جامعة</button>
+    <button class="filter-tab" onclick="filterDuaCards('ليلة القدر',this)">⭐ ليلة القدر</button>
+  </div>
+
+  <div class="dua-cards-grid" id="dua-cards-grid"></div>
+</div>
+
+<!-- ════ SECTION: STATS ════ -->
+<div id="section-stats" class="section">
+  <div class="hero hadith-hero">
+    <div class="orn-rule"><div class="orn-line flip"></div><div class="orn-diamond"></div><div class="orn-star">✦</div><div class="orn-diamond"></div><div class="orn-line"></div></div>
+    <p class="hero-eyebrow">رمضانك بالأرقام</p>
+    <h1 class="hero-title">إحصائيات رمضان ١٤٤٧</h1>
+    <p class="hero-sub">نظرة شاملة على تقدمك في هذا الشهر الفضيل</p>
+  </div>
+  <div style="max-width:800px;margin:0 auto;padding:0 20px 50px">
+
+    <!-- Big numbers -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:24px" id="big-stats"></div>
+
+    <!-- Weekly chart -->
+    <div style="background:rgba(13,19,72,0.75);border:1px solid rgba(196,145,42,0.2);border-radius:16px;padding:20px;margin-bottom:16px">
+      <div style="font-family:var(--font-ar);font-size:1rem;color:var(--gold-pale);margin-bottom:16px;text-align:center">📈 مخطط التقدم الأسبوعي</div>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:100px;padding:0 4px" id="weekly-chart"></div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:0.7rem;color:var(--gold-dim);font-family:var(--font-ar)">
+        <span>الأسبوع ١</span><span>الأسبوع ٢</span><span>الأسبوع ٣</span><span>الأسبوع ٤</span>
+      </div>
+    </div>
+
+    <!-- Task breakdown -->
+    <div style="background:rgba(13,19,72,0.7);border:1px solid rgba(196,145,42,0.18);border-radius:16px;padding:20px;margin-bottom:16px">
+      <div style="font-family:var(--font-ar);font-size:1rem;color:var(--gold-pale);margin-bottom:16px;text-align:center">🏅 أداء المهام اليومية</div>
+      <div id="task-breakdown" style="display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+
+    <!-- Streak -->
+    <div style="background:linear-gradient(135deg,rgba(30,0,80,0.8),rgba(13,19,72,0.85));border:1px solid rgba(196,145,42,0.4);border-radius:16px;padding:20px;text-align:center">
+      <div style="font-size:2.5rem;margin-bottom:8px" id="streak-fire">🔥</div>
+      <div style="font-family:var(--font-ar);font-size:1.8rem;color:var(--gold-bright);font-weight:700" id="streak-num">٠</div>
+      <div style="font-family:var(--font-ar);font-size:0.9rem;color:var(--ivory-mid)">أيام متتالية مكتملة</div>
+      <div style="font-family:var(--font-ar);font-size:0.8rem;color:var(--gold-dim);margin-top:8px" id="streak-msg"></div>
+    </div>
+
+  </div>
+</div>
+
+
+</div><!-- /page -->
+
+<script>
+
+</script>
+</body>
+</html>
