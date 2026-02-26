@@ -28,7 +28,11 @@
   <div class="np-title">🔔 إعدادات التنبيهات</div>
   <div class="np-row"><span class="np-label">🌙 تنبيه السحور (قبل ٣٠ دقيقة)</span><div class="np-toggle" id="notif-suhoor" onclick="toggleNotif('suhoor')"></div></div>
   <div class="np-row"><span class="np-label">🌅 تنبيه الإفطار (عند الأذان)</span><div class="np-toggle" id="notif-iftar" onclick="toggleNotif('iftar')"></div></div>
-  <div class="np-row"><span class="np-label">📖 تذكير التلاوة اليومية</span><div class="np-toggle" id="notif-quran" onclick="toggleNotif('quran_remind')"></div></div>
+  <div class="np-row"><span class="np-label">🌙 تنبيه الفجر</span><div class="np-toggle" id="notif-fajr" onclick="toggleNotif('fajr')"></div></div>
+  <div class="np-row"><span class="np-label">☀️ تنبيه الظهر</span><div class="np-toggle" id="notif-dhuhr" onclick="toggleNotif('dhuhr')"></div></div>
+  <div class="np-row"><span class="np-label">🌤 تنبيه العصر</span><div class="np-toggle" id="notif-asr" onclick="toggleNotif('asr')"></div></div>
+  <div class="np-row"><span class="np-label">🌌 تنبيه العشاء</span><div class="np-toggle" id="notif-isha" onclick="toggleNotif('isha')"></div></div>
+  <div class="np-row"><span class="np-label">📖 تذكير التلاوة اليومي</span><div class="np-toggle" id="notif-quran" onclick="toggleNotif('quran_remind')"></div></div>
   <div class="np-row"><span class="np-label">⭐ تنبيه العشر الأواخر</span><div class="np-toggle" id="notif-qadr" onclick="toggleNotif('qadr_remind')"></div></div>
   <div style="margin-top:12px;font-size:0.72rem;color:var(--gold-dim);text-align:center;font-family:var(--font-body)">التنبيهات تعمل عند فتح الصفحة فقط</div>
 </div>
@@ -104,6 +108,9 @@
         <div class="badge-title">ما اكتسبته اليوم</div>
         <div class="badge-chips" id="badge-chips"></div>
       </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-ok" onclick="closeModal()">حسنًا</button>
     </div>
   </div>
 </div>
@@ -580,6 +587,12 @@
 </div><!-- /page -->
 
 <footer class="main-footer">
+  <div class="footer-memorial">
+    <div class="memorial-frame">
+      <img src="Imge/Dad.png" alt="صدقة جارية" class="memorial-photo">
+    </div>
+    <div class="memorial-text">صدقة جارية على روح والدي رحمه الله</div>
+  </div>
   <div class="footer-content">
     <div class="footer-orn">✦ ✧ ✦</div>
     <p>تم التطوير بواسطة <strong>أسامة مطر</strong></p>
