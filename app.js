@@ -786,36 +786,28 @@ renderStatsPage();
     </div>
   `;
 
-  // Show modal and alert on open
-  setTimeout(() => {
-    const today = new Date().toDateString();
-    const lastShow = localStorage.getItem('last_dua_show');
-    
-    // Check if shown today
-    if (lastShow !== today) {
-      // 1. Show the Modal by appending it
-      document.body.appendChild(overlay);
+    // Show modal on open (once per day)
+    setTimeout(() => {
+      const today = new Date().toISOString().split('T')[0]; // Use YYYY-MM-DD for consistency
+      const lastShow = localStorage.getItem('last_dua_show');
       
-      // Add floating stars to the modal overlay
-      const starsEl = document.getElementById('dr-stars');
-      if (starsEl) {
-        for(let i=0; i<18; i++){
-          const s = document.createElement('div');
-          s.className = 'dr-star';
-          s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*3}s;width:${Math.random()*3+1}px;height:${Math.random()*3+1}px;`;
-          starsEl.appendChild(s);
+      if (lastShow !== today) {
+        document.body.appendChild(overlay);
+        
+        const starsEl = document.getElementById('dr-stars');
+        if (starsEl) {
+          for(let i=0; i<18; i++){
+            const s = document.createElement('div');
+            s.className = 'dr-star';
+            s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*3}s;width:${Math.random()*3+1}px;height:${Math.random()*3+1}px;`;
+            starsEl.appendChild(s);
+          }
         }
+        
+        document.body.style.overflow = 'hidden';
+        localStorage.setItem('last_dua_show', today);
       }
-      
-      document.body.style.overflow = 'hidden';
-
-      // 2. Show the system Alert
-      alert('لا تنسونا من صالح دعائكم ولا تنسوا الدعاء لوالدي بالرحمة والمغفرة 🤲');
-      
-      // Record today as shown
-      localStorage.setItem('last_dua_show', today);
-    }
-  }, 1000);
+    }, 1500);
 })();
 
 window.closeDuaReminder = function() {
@@ -912,6 +904,11 @@ async function fetchPrayerTimes() {
     loadEl.style.display = 'none';
     cardsEl.style.display = 'block';
     startCountdown(prayerData);
+    // Start notification checking loop
+    if (!window.notifInterval) {
+      window.notifInterval = setInterval(() => checkNotifications(prayerData), 60000);
+      checkNotifications(prayerData); // Initial check
+    }
   } catch(e) {
     loadEl.style.display = 'none';
     errEl.style.display = 'block';
@@ -1178,13 +1175,14 @@ function renderQuranUI() {
 function toggleTheme() {
   const isLight = document.body.classList.toggle('light-theme');
   localStorage.setItem('rm47_theme', isLight ? 'light' : 'dark');
-  document.getElementById('theme-toggle').textContent = isLight ? '🌞' : '🌙';
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.textContent = isLight ? '🌞' : '🌙';
 }
 (function initTheme() {
   if(localStorage.getItem('rm47_theme') === 'light') {
     document.body.classList.add('light-theme');
     const btn = document.getElementById('theme-toggle');
-    if(btn) btn.textContent = '🌞';
+    if (btn) btn.textContent = '🌞';
   }
 })();
 
@@ -1200,17 +1198,13 @@ function loadNotifSettings() {
 }
 
 function toggleNotif(key) {
+  if (!notifSettings) notifSettings = {};
   notifSettings[key] = !notifSettings[key];
   localStorage.setItem('rm47_notif', JSON.stringify(notifSettings));
   const idMap = { suhoor:'notif-suhoor', iftar:'notif-iftar', quran_remind:'notif-quran', qadr_remind:'notif-qadr' };
   const el = document.getElementById(idMap[key]);
   if(el) el.classList.toggle('on', notifSettings[key]);
-  if(notifSettings[key]) {
-    requestNotifPermission();
-    toast('🔔 تم تفعيل التنبيه');
-  } else {
-    toast('🔕 تم إيقاف التنبيه');
-  }
+  toast(notifSettings[key] ? 'تم تفعيل التنبيه' : 'تم إيقاف التنبيه');
 }
 
 function toggleNotifPanel() {
@@ -1597,57 +1591,20 @@ function updateStatsOnTabChange(name) {
   }
 }
 
-/* ════════════════════════════════════════════════
-   UI CONTROLS (Theme, Nav, Notifs)
-   ════════════════════════════════════════════════ */
-function toggleTheme() {
-  document.body.classList.toggle('light-theme');
-  const isLight = document.body.classList.contains('light-theme');
-  localStorage.setItem('theme', isLight ? 'light' : 'dark');
-  const btn = document.getElementById('theme-toggle');
-  if (btn) btn.textContent = isLight ? '🌙' : '☀️';
-}
-
-function toggleNotifPanel() {
-  const panel = document.getElementById('notif-panel');
-  if (panel) panel.classList.toggle('open');
-}
-
-function toggleNotif(type) {
-  const btn = document.getElementById(`notif-${type}`);
-  if (!btn) return;
-  const isActive = btn.classList.toggle('on');
-  localStorage.setItem(`notif_${type}`, isActive);
-  toast(isActive ? 'تم تفعيل التنبيه' : 'تم إيقاف التنبيه');
-}
-
-function showSection(id, btn) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  const target = document.getElementById(`section-${id}`);
-  if (target) target.classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  toggleMenu(false);
-  updateStatsOnTabChange(id);
-}
-
-function toggleMenu(force) {
-  const navLinks = document.getElementById('nav-links');
-  const navOverlay = document.getElementById('nav-overlay');
-  if (force === false) {
-    if (navLinks) navLinks.classList.remove('open');
-    if (navOverlay) navOverlay.classList.remove('open');
-  } else {
-    if (navLinks) navLinks.classList.toggle('open');
-    if (navOverlay) navOverlay.classList.toggle('open');
-  }
-}
-
-// Initialize theme on load
+// Global initialization
 document.addEventListener('DOMContentLoaded', () => {
-  if (localStorage.getItem('theme') === 'light') {
-    document.body.classList.add('light-theme');
-    const themeBtn = document.getElementById('theme-toggle');
-    if (themeBtn) themeBtn.textContent = '🌙';
-  }
+  tLoad();
+  hLoad();
+  tbLoad();
+  goalsLoad();
+  quranLoad();
+  loadNotifSettings();
+  loadSavedPrayerLocation();
+  updateStats();
+  renderCalendar();
+  requestNotifPermission();
+  
+  // Hash navigation
+  const hash = window.location.hash.replace('#','');
+  if(hash) showSection(hash);
 });

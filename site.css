@@ -197,7 +197,28 @@ nav {
   animation:popIn 0.35s cubic-bezier(0.175,.885,.32,1.275);
 }
 @keyframes popIn { from{transform:scale(0.88) translateY(20px); opacity:0;} }
-.modal-close { position:absolute; top:14px; left:14px; background:rgba(196,145,42,0.1); border:1px solid rgba(196,145,42,0.25); border-radius:50%; width:32px; height:32px; color:var(--gold-pale); cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; }
+.modal-close { 
+  position:absolute; 
+  top:14px; 
+  right:14px; 
+  background:rgba(196,145,42,0.2); 
+  border:1px solid rgba(196,145,42,0.4); 
+  border-radius:50%; 
+  width:36px; 
+  height:36px; 
+  color:var(--gold-bright); 
+  cursor:pointer; 
+  font-size:1.2rem; 
+  display:flex; 
+  align-items:center; 
+  justify-content:center; 
+  z-index: 100;
+  transition: var(--tr);
+}
+.modal-close:hover {
+  background:rgba(196,145,42,0.3);
+  transform: scale(1.1);
+}
 .modal-inner { padding:28px 22px 22px; }
 .modal-head { text-align:center; margin-bottom:18px; }
 .m-day-num { font-family:var(--font-dec); font-size:0.62rem; letter-spacing:4px; color:var(--gold-dim); text-transform:uppercase; margin-bottom:4px; }
@@ -385,7 +406,52 @@ nav {
 ::-webkit-scrollbar-track { background:var(--ink); }
 ::-webkit-scrollbar-thumb { background:var(--gold-dim); border-radius:3px; }
 
-/* ════ RESPONSIVE ════ */
+/* ════ FOOTER ════ */
+.main-footer {
+  position: relative;
+  z-index: 5;
+  padding: 40px 20px;
+  text-align: center;
+  border-top: 1px solid var(--gold-trace);
+  background: rgba(3, 5, 15, 0.5);
+  backdrop-filter: blur(10px);
+  margin-top: 40px;
+}
+.footer-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+.footer-orn {
+  color: var(--gold-dim);
+  letter-spacing: 8px;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+}
+.main-footer p {
+  font-family: var(--font-ar);
+  font-size: 1.1rem;
+  color: var(--gold-pale);
+  margin-bottom: 5px;
+}
+.main-footer strong {
+  color: var(--gold-bright);
+}
+.en-credit {
+  font-family: var(--font-body);
+  font-size: 0.85rem !important;
+  opacity: 0.8;
+  letter-spacing: 1px;
+}
+.footer-year {
+  margin-top: 15px;
+  font-size: 0.75rem;
+  color: var(--gold-dim);
+  font-family: var(--font-dec);
+  letter-spacing: 2px;
+}
+body.light-theme .main-footer {
+  background: rgba(240, 235, 224, 0.5);
+}
 @media (max-width:640px) {
   .calendar { grid-template-columns:repeat(auto-fill,minmax(90px,1fr)); gap:8px; }
   .hadith-grid { grid-template-columns:1fr; }
@@ -394,6 +460,15 @@ nav {
   nav { height:auto; padding:8px; flex-wrap:wrap; gap:4px; }
   .nav-logo { width:100%; text-align:center; margin-left:0; order:-1; }
   .nav-links { justify-content:center; }
+  .modal-close {
+    width: 44px;
+    height: 44px;
+    top: 10px;
+    right: 10px;
+    font-size: 1.4rem;
+    background: rgba(196,145,42,0.3);
+    border-color: var(--gold);
+  }
 }
 
 /* ════ TASBIH VIBRATE ════ */
