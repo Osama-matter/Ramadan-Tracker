@@ -1,6 +1,6 @@
 {
-  "name": "Ramadan Tracker 1447",
-  "short_name": "Ramadan",
+  "name": "أثر - Athar",
+  "short_name": "أثر",
   "description": "A comprehensive Ramadan tracker and prayer times app.",
   "start_url": "./index.html",
   "display": "standalone",

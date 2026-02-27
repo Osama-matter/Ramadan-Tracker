@@ -23,7 +23,37 @@ let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  // You could show a custom install button here if desired
+  
+  // Show the install UI elements
+  const banner = document.getElementById('pwa-install-banner');
+  const card = document.getElementById('mobile-install-card');
+  if (banner) banner.style.display = 'flex';
+  if (card) card.style.display = 'block';
+});
+
+async function installPWA() {
+  if (!deferredPrompt) {
+    toast('📢 التطبيق مثبت بالفعل أو المتصفح لا يدعم التثبيت التلقائي');
+    return;
+  }
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') {
+    hideInstallBanner();
+  }
+  deferredPrompt = null;
+}
+
+function hideInstallBanner() {
+  const banner = document.getElementById('pwa-install-banner');
+  if (banner) banner.style.display = 'none';
+}
+
+window.addEventListener('appinstalled', () => {
+  hideInstallBanner();
+  const card = document.getElementById('mobile-install-card');
+  if (card) card.style.display = 'none';
+  toast('🎉 تم تثبيت تطبيق أثر بنجاح!');
 });
 
 function installApp() {
@@ -486,22 +516,36 @@ async function initQibla() {
     qiblaAngle = (qiblaAngle + 360) % 360;
 
     msg.textContent = '✅ تم تحديد الموقع بنجاح';
-    deg.textContent = `زاوية القبلة: ${toAr(Math.round(qiblaAngle))}°`;
+    deg.textContent = `زاوية القبلة: ${toAr(Math.round(qiblaAngle))}° من الشمال`;
     btn.style.display = 'none';
+
+    const handlePermission = async () => {
+      try {
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+          const permission = await DeviceOrientationEvent.requestPermission();
+          if (permission === 'granted') {
+            window.addEventListener('deviceorientation', handleOrientation, true);
+            btn.style.display = 'none';
+          } else {
+            msg.textContent = '❌ تم رفض إذن البوصلة';
+          }
+        } else {
+          window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+          window.addEventListener('deviceorientation', handleOrientation, true);
+          btn.style.display = 'none';
+        }
+      } catch (err) {
+        msg.textContent = '⚠️ تأكد من فتح التطبيق عبر رابط آمن (HTTPS)';
+      }
+    };
 
     if (window.DeviceOrientationEvent) {
       if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-        // iOS 13+ permission
-        const permission = await DeviceOrientationEvent.requestPermission();
-        if (permission === 'granted') {
-          window.addEventListener('deviceorientation', handleOrientation, true);
-        } else {
-          msg.textContent = '❌ تم رفض الإذن للوصول للبوصلة';
-        }
+        btn.style.display = 'block';
+        btn.textContent = 'تشغيل البوصلة (iOS)';
+        btn.onclick = handlePermission;
       } else {
-        // Non-iOS or older devices
-        window.addEventListener('deviceorientationabsolute', handleOrientation, true);
-        window.addEventListener('deviceorientation', handleOrientation, true);
+        handlePermission();
       }
     } else {
       msg.textContent = '⚠️ جهازك لا يدعم مستشعر البوصلة';
@@ -513,27 +557,46 @@ async function initQibla() {
 }
 
 function handleOrientation(e) {
-  const compass = e.webkitCompassHeading || e.alpha;
-  if (compass === null || compass === undefined) return;
+  // Try to get heading from multiple potential sources
+  let compass = 0;
+  
+  if (e.webkitCompassHeading) {
+    // iOS
+    compass = e.webkitCompassHeading;
+  } else if (e.absolute && e.alpha !== null) {
+    // Android with absolute orientation
+    compass = 360 - e.alpha;
+  } else if (e.alpha !== null) {
+    // Fallback alpha
+    compass = 360 - e.alpha;
+  } else {
+    return;
+  }
 
   const rose = document.getElementById('compass-rose');
   const arrow = document.getElementById('qibla-arrow');
   const kaaba = document.getElementById('kaaba-icon');
   
-  // Rotate compass rose to match real North
+  if (!rose || !arrow || !kaaba) return;
+
+  // Smooth the compass reading (optional, but CSS transitions handle this well)
   rose.style.transform = `rotate(${-compass}deg)`;
   
-  // Rotate Qibla arrow relative to current heading
+  // Calculate relative Qibla angle
   const relativeQibla = (qiblaAngle - compass + 360) % 360;
   arrow.style.transform = `rotate(${relativeQibla}deg)`;
   
-  // Show Kaaba icon if pointing roughly towards it (within 10 degrees)
-  if (Math.abs(relativeQibla) < 10 || Math.abs(relativeQibla - 360) < 10) {
+  // Show Kaaba icon if pointing roughly towards it (within 15 degrees for better UX)
+  if (Math.abs(relativeQibla) < 15 || Math.abs(relativeQibla - 360) < 15) {
     kaaba.style.opacity = '1';
+    kaaba.style.transform = 'translateX(-50%) scale(1.2)';
     document.getElementById('qibla-compass-container').style.borderColor = 'var(--gold-bright)';
+    document.getElementById('qibla-compass-container').style.boxShadow = '0 0 50px rgba(196,145,42,0.4)';
   } else {
-    kaaba.style.opacity = '0';
+    kaaba.style.opacity = '0.3';
+    kaaba.style.transform = 'translateX(-50%) scale(1)';
     document.getElementById('qibla-compass-container').style.borderColor = 'var(--gold-glow)';
+    document.getElementById('qibla-compass-container').style.boxShadow = '0 0 40px rgba(196,145,42,0.2)';
   }
 }
 

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="./manifest.json">
 <link rel="apple-touch-icon" href="./Imge/lamp.png">
-<title>رمضان كريم — موقع شامل ١٤٤٧ هـ</title>
+<title>أثر — رفيقك في رمضان ١٤٤٧ هـ</title>
 <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Scheherazade+New:wght@400;500;700&family=Cinzel+Decorative:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./site.css">
 <script src="./adhkar_data.js" defer></script>
@@ -74,7 +74,7 @@
 <!-- NAV -->
 <nav>
   <button class="menu-toggle" id="menu-toggle" onclick="toggleMenu()" aria-label="القائمة">☰</button>
-  <div class="nav-logo">رمضان كريم ١٤٤٧</div>
+  <div class="nav-logo">أثر</div>
   <div class="nav-links-overlay" id="nav-overlay" onclick="toggleMenu()"></div>
   <div class="nav-links" id="nav-links">
     <button class="nav-btn active" onclick="showSection('tracker', this)">📅 متابعة رمضان</button>
@@ -835,6 +835,11 @@
         <div style="font-size:2.5rem;margin-bottom:10px">📜</div>
         <div style="font-family:var(--font-ar);color:var(--gold-bright);font-weight:700">أحاديث أخرى</div>
       </div>
+      <!-- INSTALL CARD -->
+      <div id="mobile-install-card" onclick="installPWA()" style="background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:1px solid rgba(0,0,0,0.1);border-radius:16px;padding:25px;text-align:center;cursor:pointer;transition:transform 0.3s;display:none" class="tool-card">
+        <div style="font-size:2.5rem;margin-bottom:10px">📲</div>
+        <div style="font-family:var(--font-ar);color:var(--ink);font-weight:700">تثبيت التطبيق</div>
+      </div>
     </div>
   </div>
 </div>
@@ -885,6 +890,21 @@
     <div class="memorial-frame">
       <img src="Imge/Dad.png" alt="صدقة جارية" class="memorial-photo">
     </div>
+    <div class="memorial-text">صدقة جارية على روح والدي رحمه الله</div>
+  </div>
+  <div class="footer-content">
+    <div class="footer-orn">✦ ✧ ✦</div>
+    <p>تم التطوير بواسطة <strong>أسامة مطر</strong></p>
+    <p class="en-credit">Developed by <strong>Osama Mater</strong></p>
+    <div class="footer-year">١٤٤٧ هـ — ٢٠٢٦ م</div>
+  </div>
+</footer>
+
+<script>
+
+</script>
+</body>
+</html>
     <div class="memorial-text">صدقة جارية على روح والدي رحمه الله</div>
   </div>
   <div class="footer-content">
