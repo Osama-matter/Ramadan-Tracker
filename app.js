@@ -1,3 +1,43 @@
+/* ════ SERVICE WORKER REGISTRATION ════ */
+async function requestNotifPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    await Notification.requestPermission();
+  }
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    // Only register if running on a server (http/https)
+    if (window.location.protocol.startsWith('http')) {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(reg => console.log('SW Registered', reg.scope))
+        .catch(err => console.warn('SW Register Error', err));
+    } else {
+      console.warn('Service Worker skipped: Not running on a web server.');
+    }
+  });
+}
+
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // You could show a custom install button here if desired
+});
+
+function installApp() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+      }
+      deferredPrompt = null;
+    });
+  }
+}
+
 /*══ EARLY DECLARATIONS ════ */
 const RAMADAN_START = new Date(2026, 1, 19);
 const TOTAL = 30;
@@ -66,6 +106,261 @@ let quranData = { pagesPerDay: {}, khatmaCount: 1 };
 let prayerData = null;
 let duaCardFilter = 'all';
 
+let currentQuranMode = 'surah';
+let currentQuranRef = null; // { type: 'surah'|'juz'|'page', id: number }
+
+async function initQuranReader() {
+  const surahSelect = document.getElementById('quran-surah-select');
+  const juzSelect = document.getElementById('quran-juz-select');
+  
+  // Load bookmark on init
+  loadQuranBookmark();
+  
+  if (surahSelect && surahSelect.options.length <= 1) {
+    try {
+      const res = await fetch('https://api.alquran.cloud/v1/surah');
+      const data = await res.json();
+      if (data.code === 200) {
+        surahSelect.innerHTML = '<option value="">اختر السورة...</option>' + 
+          data.data.map(s => `<option value="${s.number}">${s.number}. ${s.name}</option>`).join('');
+      }
+    } catch (err) { console.error('Surah list error:', err); }
+  }
+
+  if (juzSelect && juzSelect.options.length <= 1) {
+    let juzOptions = '<option value="">اختر الجزء...</option>';
+    for (let i = 1; i <= 30; i++) {
+      juzOptions += `<option value="${i}">الجزء ${toAr(i)}</option>`;
+    }
+    juzSelect.innerHTML = juzOptions;
+  }
+}
+
+function switchQuranMode(mode) {
+  currentQuranMode = mode;
+  document.querySelectorAll('.quran-mode-ui').forEach(el => el.style.display = 'none');
+  document.getElementById(`quran-mode-${mode}`).style.display = 'block';
+  
+  document.querySelectorAll('#section-quran-read .tb-tab').forEach(btn => btn.classList.remove('active'));
+  document.getElementById(`btn-quran-${mode}`).classList.add('active');
+}
+
+async function loadSurah() {
+  const id = document.getElementById('quran-surah-select').value;
+  if (!id) return;
+  currentQuranRef = { type: 'surah', id: parseInt(id) };
+  await fetchAndDisplayQuran(`https://api.alquran.cloud/v1/surah/${id}/quran-uthmani`);
+}
+
+async function loadJuz() {
+  const id = document.getElementById('quran-juz-select').value;
+  if (!id) return;
+  currentQuranRef = { type: 'juz', id: parseInt(id) };
+  await fetchAndDisplayQuran(`https://api.alquran.cloud/v1/juz/${id}/quran-uthmani`);
+}
+
+async function loadPage() {
+  const id = document.getElementById('quran-page-input').value;
+  if (!id || id < 1 || id > 604) { toast('يرجى إدخال رقم صفحة صحيح (١-٦٠٤)'); return; }
+  currentQuranRef = { type: 'page', id: parseInt(id) };
+  await fetchAndDisplayQuran(`https://api.alquran.cloud/v1/page/${id}/quran-uthmani`);
+}
+
+async function fetchAndDisplayQuran(url) {
+  const container = document.getElementById('quran-container');
+  const loader = document.getElementById('quran-loader');
+  const textEl = document.getElementById('quran-text');
+  const nameEl = document.getElementById('surah-name-ar');
+  const infoEl = document.getElementById('surah-info');
+  const basmalah = document.getElementById('basmalah');
+  const controls = document.getElementById('quran-controls');
+
+  container.style.display = 'none';
+  controls.style.display = 'none';
+  loader.style.display = 'block';
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    
+    if (data.code === 200) {
+      const d = data.data;
+      let ayahs = d.ayahs || [];
+      
+      if (currentQuranRef.type === 'surah') {
+        nameEl.textContent = d.name;
+        infoEl.textContent = `${d.revelationType === 'Meccan' ? 'مكية' : 'مدنية'} • ${d.numberOfAyahs} آية`;
+        basmalah.style.display = (currentQuranRef.id != 1 && currentQuranRef.id != 9) ? 'block' : 'none';
+        if (basmalah.style.display === 'block' && ayahs[0].text.includes('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ')) {
+          ayahs[0].text = ayahs[0].text.replace('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', '').trim();
+        }
+      } else if (currentQuranRef.type === 'juz') {
+        nameEl.textContent = `الجزء ${toAr(currentQuranRef.id)}`;
+        infoEl.textContent = `من سورة ${ayahs[0].surah.name} إلى سورة ${ayahs[ayahs.length-1].surah.name}`;
+        basmalah.style.display = 'none';
+      } else if (currentQuranRef.type === 'page') {
+        nameEl.textContent = `الصفحة ${toAr(currentQuranRef.id)}`;
+        infoEl.textContent = `سورة ${ayahs[0].surah.name}`;
+        basmalah.style.display = 'none';
+      }
+
+      textEl.innerHTML = ayahs.map(a => {
+        let txt = a.text;
+        if (currentQuranRef.type !== 'surah' && a.numberInSurah === 1 && a.surah.number !== 1 && a.surah.number !== 9) {
+          txt = `<div style="text-align:center; font-size:1.4rem; color:var(--gold-pale); margin:20px 0; display:block">【 ${a.surah.name} 】</div>` + 
+                `<div style="text-align:center; font-size:1.6rem; margin-bottom:15px; display:block">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>` + 
+                txt.replace('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', '').trim();
+        }
+        return `${txt} <span class="aya-num">(${toAr(a.numberInSurah)})</span>`;
+      }).join(' ');
+
+      updateNavButtons();
+      loader.style.display = 'none';
+      container.style.display = 'block';
+      controls.style.display = 'flex';
+      container.scrollIntoView({ behavior: 'smooth' });
+      
+      // Update bookmark info UI if currently reading the bookmarked spot
+      checkBookmarkStatus();
+      
+      // Stop audio if playing new content
+      const player = document.getElementById('quran-audio-player');
+      if (player) {
+        player.pause();
+        document.getElementById('play-audio-btn').textContent = '▶ تشغيل';
+      }
+    }
+  } catch (err) {
+    console.error('Quran fetch error:', err);
+    loader.style.display = 'none';
+    toast('⚠️ عذراً، تعذر تحميل المحتوى.');
+  }
+}
+
+function updateQuranFontSize(val) {
+  const textEl = document.getElementById('quran-text');
+  if (textEl) textEl.style.fontSize = val + 'rem';
+}
+
+function toggleQuranAudio() {
+  const player = document.getElementById('quran-audio-player');
+  const btn = document.getElementById('play-audio-btn');
+  const reciter = document.getElementById('reciter-select').value;
+  
+  if (!currentQuranRef) return;
+
+  if (player.paused) {
+    let audioUrl = '';
+    if (currentQuranRef.type === 'surah') {
+      audioUrl = `https://cdn.islamic.network/quran/audio-surah/128/${reciter}/${currentQuranRef.id}.mp3`;
+    } else {
+      toast('🔈 ميزة الاستماع متاحة حالياً عند القراءة بالسورة فقط');
+      return;
+    }
+    
+    if (player.src !== audioUrl) player.src = audioUrl;
+    player.play();
+    btn.textContent = '⏸ إيقاف';
+  } else {
+    player.pause();
+    btn.textContent = '▶ تشغيل';
+  }
+}
+
+function saveQuranBookmark() {
+  if (!currentQuranRef) return;
+  const bookmark = {
+    mode: currentQuranMode,
+    ref: currentQuranRef,
+    title: document.getElementById('surah-name-ar').textContent,
+    sub: document.getElementById('surah-info').textContent,
+    time: new Date().getTime()
+  };
+  storage.setItem('quran_bookmark', JSON.stringify(bookmark));
+  toast('✅ تم حفظ علامة القراءة بنجاح');
+  displayBookmarkUI(bookmark);
+}
+
+function loadQuranBookmark() {
+  const saved = storage.getItem('quran_bookmark');
+  if (saved) {
+    const bookmark = JSON.parse(saved);
+    displayBookmarkUI(bookmark);
+  }
+}
+
+function displayBookmarkUI(bookmark) {
+  const info = document.getElementById('active-bookmark-info');
+  if (info) {
+    info.innerHTML = `📍 آخر حفظ: <span onclick="goToBookmark()" style="cursor:pointer;text-decoration:underline;color:var(--gold-bright)">${bookmark.title} (${bookmark.sub})</span>`;
+  }
+}
+
+function checkBookmarkStatus() {
+  // Can be used to highlight if current view is bookmarked
+}
+
+async function goToBookmark() {
+  const saved = storage.getItem('quran_bookmark');
+  if (!saved) return;
+  const bookmark = JSON.parse(saved);
+  
+  switchQuranMode(bookmark.mode);
+  currentQuranRef = bookmark.ref;
+  
+  if (bookmark.mode === 'surah') {
+    document.getElementById('quran-surah-select').value = bookmark.ref.id;
+    await loadSurah();
+  } else if (bookmark.mode === 'juz') {
+    document.getElementById('quran-juz-select').value = bookmark.ref.id;
+    await loadJuz();
+  } else if (bookmark.mode === 'page') {
+    document.getElementById('quran-page-input').value = bookmark.ref.id;
+    await loadPage();
+  }
+}
+
+function updateNavButtons() {
+  const prev = document.getElementById('prev-btn');
+  const next = document.getElementById('next-btn');
+  if (!currentQuranRef) return;
+
+  prev.style.display = 'block';
+  next.style.display = 'block';
+
+  if (currentQuranRef.type === 'surah') {
+    if (currentQuranRef.id <= 1) prev.style.display = 'none';
+    if (currentQuranRef.id >= 114) next.style.display = 'none';
+  } else if (currentQuranRef.type === 'juz') {
+    if (currentQuranRef.id <= 1) prev.style.display = 'none';
+    if (currentQuranRef.id >= 30) next.style.display = 'none';
+  } else if (currentQuranRef.type === 'page') {
+    if (currentQuranRef.id <= 1) prev.style.display = 'none';
+    if (currentQuranRef.id >= 604) next.style.display = 'none';
+  }
+}
+
+async function navQuran(dir) {
+  if (!currentQuranRef) return;
+  currentQuranRef.id += dir;
+  
+  if (currentQuranRef.type === 'surah') {
+    document.getElementById('quran-surah-select').value = currentQuranRef.id;
+    await loadSurah();
+  } else if (currentQuranRef.type === 'juz') {
+    document.getElementById('quran-juz-select').value = currentQuranRef.id;
+    await loadJuz();
+  } else if (currentQuranRef.type === 'page') {
+    document.getElementById('quran-page-input').value = currentQuranRef.id;
+    await loadPage();
+  }
+}
+
+function toAr(num) {
+  const symbols = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+  return String(num).replace(/[0-9]/g, d => symbols[d]);
+}
+
 /* ════ STORAGE WRAPPER ════ */
 const storage = {
   getItem: (key) => {
@@ -121,18 +416,209 @@ resizeSky(); buildStars(); drawSky();
 function toggleMenu() {
   const links = document.getElementById('nav-links');
   const overlay = document.getElementById('nav-overlay');
+  if (!links || !overlay) return;
+  
   const isOpen = links.classList.toggle('open');
-  if (overlay) overlay.classList.toggle('open', isOpen);
+  overlay.classList.toggle('open', isOpen);
+  
+  if (isOpen) {
+    overlay.style.display = 'block';
+    overlay.style.pointerEvents = 'auto';
+    overlay.style.zIndex = '9998';
+    links.style.zIndex = '9999';
+    links.scrollTop = 0;
+    setTimeout(() => {
+      overlay.style.opacity = '1';
+      overlay.style.visibility = 'visible';
+      // Force position to top of viewport and full height
+      links.style.setProperty('top', '0', 'important');
+      links.style.setProperty('right', '0', 'important');
+      links.style.setProperty('bottom', '0', 'important');
+      links.style.setProperty('height', '100vh', 'important');
+      links.style.setProperty('transform', 'none', 'important');
+      links.style.setProperty('display', 'flex', 'important');
+      links.style.setProperty('position', 'fixed', 'important');
+    }, 10);
+  } else {
+    overlay.style.opacity = '0';
+    overlay.style.pointerEvents = 'none';
+    links.style.setProperty('right', '-280px', 'important');
+    setTimeout(() => {
+      if (!links.classList.contains('open')) {
+        overlay.style.display = 'none';
+        overlay.style.visibility = 'hidden';
+        links.style.setProperty('display', 'none', 'important');
+      }
+    }, 300);
+  }
+}
+
+/* ════ QIBLA DIRECTION ════ */
+let qiblaAngle = 0;
+let userAngle = 0;
+
+async function initQibla() {
+  const msg = document.getElementById('qibla-msg');
+  const deg = document.getElementById('qibla-deg');
+  const btn = document.getElementById('qibla-btn');
+
+  if (!navigator.geolocation) {
+    msg.textContent = '❌ المتصفح لا يدعم تحديد الموقع';
+    return;
+  }
+
+  msg.textContent = 'جاري تحديد موقعك...';
+  
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const { latitude, longitude } = pos.coords;
+    
+    // Kaaba coordinates: 21.4225° N, 39.8262° E
+    const kLat = 21.4225;
+    const kLng = 39.8262;
+    
+    const phi1 = latitude * Math.PI / 180;
+    const phi2 = kLat * Math.PI / 180;
+    const L = (kLng - longitude) * Math.PI / 180;
+    
+    const y = Math.sin(L);
+    const x = Math.cos(phi1) * Math.tan(phi2) - Math.sin(phi1) * Math.cos(L);
+    qiblaAngle = Math.atan2(y, x) * 180 / Math.PI;
+    qiblaAngle = (qiblaAngle + 360) % 360;
+
+    msg.textContent = '✅ تم تحديد الموقع بنجاح';
+    deg.textContent = `زاوية القبلة: ${toAr(Math.round(qiblaAngle))}°`;
+    btn.style.display = 'none';
+
+    if (window.DeviceOrientationEvent) {
+      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        // iOS 13+ permission
+        const permission = await DeviceOrientationEvent.requestPermission();
+        if (permission === 'granted') {
+          window.addEventListener('deviceorientation', handleOrientation, true);
+        } else {
+          msg.textContent = '❌ تم رفض الإذن للوصول للبوصلة';
+        }
+      } else {
+        // Non-iOS or older devices
+        window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+        window.addEventListener('deviceorientation', handleOrientation, true);
+      }
+    } else {
+      msg.textContent = '⚠️ جهازك لا يدعم مستشعر البوصلة';
+    }
+  }, (err) => {
+    msg.textContent = '❌ فشل تحديد الموقع، يرجى تفعيل GPS';
+    console.error(err);
+  });
+}
+
+function handleOrientation(e) {
+  const compass = e.webkitCompassHeading || e.alpha;
+  if (compass === null || compass === undefined) return;
+
+  const rose = document.getElementById('compass-rose');
+  const arrow = document.getElementById('qibla-arrow');
+  const kaaba = document.getElementById('kaaba-icon');
+  
+  // Rotate compass rose to match real North
+  rose.style.transform = `rotate(${-compass}deg)`;
+  
+  // Rotate Qibla arrow relative to current heading
+  const relativeQibla = (qiblaAngle - compass + 360) % 360;
+  arrow.style.transform = `rotate(${relativeQibla}deg)`;
+  
+  // Show Kaaba icon if pointing roughly towards it (within 10 degrees)
+  if (Math.abs(relativeQibla) < 10 || Math.abs(relativeQibla - 360) < 10) {
+    kaaba.style.opacity = '1';
+    document.getElementById('qibla-compass-container').style.borderColor = 'var(--gold-bright)';
+  } else {
+    kaaba.style.opacity = '0';
+    document.getElementById('qibla-compass-container').style.borderColor = 'var(--gold-glow)';
+  }
+}
+
+/* ════ ZAKAT CALCULATOR ════ */
+/* ════ POSTER GENERATOR ════ */
+const POSTER_QUOTES = [
+  { text: "شَهْرُ رَمَضَانَ الَّذِي أُنزِلَ فِيهِ الْقُرْآنُ", source: "سورة البقرة" },
+  { text: "وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ", source: "سورة البقرة" },
+  { text: "لَيْلَةُ الْقَدْرِ خَيْرٌ مِّنْ أَلْفِ شَهْرٍ", source: "سورة القدر" },
+  { text: "الصوم جنة", source: "حديث شريف" },
+  { text: "تسحروا فإن في السحور بركة", source: "حديث شريف" },
+  { text: "اللهم إنك عفو كريم تحب العفو فاعف عني", source: "دعاء مأثور" }
+];
+
+function generateRandomPoster() {
+  const quote = POSTER_QUOTES[Math.floor(Math.random() * POSTER_QUOTES.length)];
+  document.getElementById('poster-text').textContent = quote.text;
+  document.getElementById('poster-source').textContent = `— ${quote.source}`;
+  document.getElementById('custom-poster-text').value = quote.text;
+}
+
+function setPosterTheme(theme) {
+  const preview = document.getElementById('poster-preview-container');
+  if (theme === 'deep-blue') preview.style.background = 'linear-gradient(135deg,#0d1952,#03050f)';
+  if (theme === 'royal-purple') preview.style.background = 'linear-gradient(135deg,#2e004f,#03050f)';
+  if (theme === 'emerald-green') preview.style.background = 'linear-gradient(135deg,#003d2e,#03050f)';
+}
+
+document.getElementById('custom-poster-text')?.addEventListener('input', (e) => {
+  document.getElementById('poster-text').textContent = e.target.value;
+  document.getElementById('poster-source').textContent = '';
+});
+
+function calculateZakat() {
+  const goldPrice = parseFloat(document.getElementById('gold-price').value);
+  const totalAmount = parseFloat(document.getElementById('zakat-amount').value);
+  const resultDiv = document.getElementById('zakat-result');
+  const nisabStatus = document.getElementById('nisab-status');
+  const zakatBox = document.getElementById('zakat-value-box');
+  const zakatValue = document.getElementById('zakat-value');
+
+  if (!goldPrice || !totalAmount) {
+    toast('⚠️ يرجى إدخال سعر الذهب والمبلغ بشكل صحيح');
+    return;
+  }
+
+  const nisab = goldPrice * 85; // 85 grams of gold
+  resultDiv.style.display = 'block';
+
+  if (totalAmount >= nisab) {
+    nisabStatus.innerHTML = `✅ مالك بلغ النصاب (${toAr(Math.round(nisab).toLocaleString())})<br><span style="color:var(--gold-pale);font-size:0.9rem">تجب عليك الزكاة</span>`;
+    zakatBox.style.display = 'block';
+    const zakat = totalAmount * 0.025; // 2.5%
+    zakatValue.textContent = toAr(Math.round(zakat).toLocaleString());
+  } else {
+    nisabStatus.innerHTML = `ℹ️ لم يبلغ مالك النصاب بعد.<br>النصاب الحالي هو: ${toAr(Math.round(nisab).toLocaleString())}`;
+    zakatBox.style.display = 'none';
+  }
+  
+  resultDiv.scrollIntoView({ behavior: 'smooth' });
 }
 
 function showSection(name, btnElement) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('section-' + name).classList.add('active');
+  document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.remove('active'));
+  
+  const section = document.getElementById('section-' + name);
+  if (section) section.classList.add('active');
+  
   if(btnElement) btnElement.classList.add('active');
+  
+  // Also sync mobile nav if desktop nav was clicked
+  if (btnElement && btnElement.classList.contains('nav-btn')) {
+     const mobileItem = Array.from(document.querySelectorAll('.mobile-nav-item')).find(i => i.getAttribute('onclick')?.includes(`'${name}'`));
+     if (mobileItem) mobileItem.classList.add('active');
+  }
+
   const links = document.getElementById('nav-links');
   if (links) links.classList.remove('open');
+  const overlay = document.getElementById('nav-overlay');
+  if (overlay) overlay.classList.remove('open');
+
   window.scrollTo(0,0);
+  if (name === 'quran-read') initQuranReader();
   if (typeof updateStatsOnTabChange === 'function') updateStatsOnTabChange(name);
 }
 
@@ -456,7 +942,7 @@ async function fetchPrayerTimes() {
   savePrayerLocation();
 
   try {
-    const url = `https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=4`;
+    const url = `https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=5&tune=0,-5,0,0,0,0,0,0,0`;
     const res  = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
@@ -469,7 +955,7 @@ async function fetchPrayerTimes() {
   } catch (err) {
     console.warn('Prayer API failed, using fallback:', err.message);
     // Reasonable fallback (Egypt/Cairo approximate for Ramadan 2026)
-    prayerData = { Imsak:'04:50', Fajr:'05:00', Sunrise:'06:22', Dhuhr:'12:04', Asr:'15:20', Maghrib:'17:38', Isha:'18:58' };
+    prayerData = { Imsak:'04:45', Fajr:'04:55', Sunrise:'06:22', Dhuhr:'12:06', Asr:'15:22', Maghrib:'17:50', Isha:'19:08' };
     displayPrayerTimes(prayerData);
     if (cardsEl) cardsEl.style.display = '';
     startCountdown(prayerData);
@@ -482,6 +968,14 @@ async function fetchPrayerTimes() {
   }
 }
 
+function to12h(t24) {
+  if (!t24) return '--:--';
+  let [h, m] = t24.split(':').map(Number);
+  const period = h >= 12 ? 'م' : 'ص';
+  h = h % 12 || 12;
+  return `${h}:${String(m).padStart(2, '0')} ${period}`;
+}
+
 /* FIX: displayPrayerTimes — guard against missing timings, highlight next prayer correctly */
 function displayPrayerTimes(t) {
   if (!t || !t.Fajr) { console.error('Invalid prayer data:', t); return; }
@@ -490,8 +984,8 @@ function displayPrayerTimes(t) {
   const imsakEl   = document.getElementById('imsak-time');
   const iftarEl   = document.getElementById('iftar-time');
   const dateEl    = document.getElementById('prayer-date-label');
-  if (imsakEl) imsakEl.textContent = imsakTime;
-  if (iftarEl) iftarEl.textContent = t.Maghrib;
+  if (imsakEl) imsakEl.textContent = to12h(imsakTime);
+  if (iftarEl) iftarEl.textContent = to12h(t.Maghrib);
   if (dateEl)  dateEl.textContent  = '📅 ' + new Date().toLocaleDateString('ar-EG', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 
   const order   = ['Imsak','Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'];
@@ -523,7 +1017,7 @@ function displayPrayerTimes(t) {
               opacity:${isPast&&!isNext?0.5:1};transition:all 0.3s">
       <div style="font-size:1.4rem">${PRAYER_ICONS[key]||'🕌'}</div>
       <div style="font-family:var(--font-ar);font-size:0.9rem;color:var(--gold-pale);margin:4px 0">${PRAYER_NAMES[key]||key}</div>
-      <div style="font-family:var(--font-ar);font-size:1.3rem;color:${isNext?'var(--gold-bright)':'var(--ivory)'};font-weight:700">${t[key]}</div>
+      <div style="font-family:var(--font-ar);font-size:1.3rem;color:${isNext?'var(--gold-bright)':'var(--ivory)'};font-weight:700">${to12h(t[key])}</div>
       ${isNext?'<div style="font-size:0.65rem;color:var(--gold-bright);margin-top:4px;font-family:var(--font-dec);letter-spacing:2px">▶ التالية</div>':''}
     </div>`;
   }).join('');

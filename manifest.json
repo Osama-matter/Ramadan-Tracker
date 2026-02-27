@@ -1,0 +1,26 @@
+{
+  "name": "Ramadan Tracker 1447",
+  "short_name": "Ramadan",
+  "description": "A comprehensive Ramadan tracker and prayer times app.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#03050f",
+  "theme_color": "#d4a335",
+  "icons": [
+    {
+      "src": "./Imge/lamp.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./Imge/lamp.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "orientation": "portrait-primary",
+  "dir": "rtl",
+  "lang": "ar"
+}
