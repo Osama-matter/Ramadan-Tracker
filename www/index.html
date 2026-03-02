@@ -115,9 +115,9 @@
         نسألكم الدعاء له بالرحمة والمغفرة ولجميع موتى المسلمين.
       </p>
       
-      <div style="background:rgba(196,145,42,0.1); border:1px solid var(--gold-trace); border-radius:12px; padding:15px; margin-bottom:20px">
+      <div style="background:rgba(196,145,42,0.1); border:1px solid var(--gold-trace); border-radius:12px; padding:15px; margin-bottom:20px; position:relative; z-index:10000">
         <div style="font-size:0.85rem; color:var(--gold-dim); margin-bottom:10px">شارك التطبيق ولك الأجر بإذن الله</div>
-        <button onclick="shareApp()" class="btn-outline" style="width:100%; padding:12px; border-radius:10px">
+        <button onclick="shareApp()" class="btn-outline" style="width:100%; padding:12px; border-radius:10px; cursor:pointer; position:relative; z-index:10001">
           📢 مشاركة التطبيق
         </button>
       </div>
@@ -341,7 +341,7 @@
         <div class="counter-target" id="tb-target">الهدف: ١٠٠</div>
         <div class="ring-bar"><div class="ring-bar-fill" id="tb-bar" style="width:0%"></div></div>
         <br>
-        <button class="tasbeeh-btn" id="tb-btn" onclick="clickTasbeeh()" ontouchstart="clickTasbeeh(); event.preventDefault();">+</button>
+        <button class="tasbeeh-btn" id="tb-btn" ontouchstart="clickTasbeeh(); event.preventDefault();">+</button>
         <div class="tasbeeh-controls">
           <button class="tb-ctrl" onclick="resetCurrent()">إعادة ضبط</button>
           <button class="tb-ctrl" onclick="resetAll()">مسح الكل</button>
@@ -463,11 +463,11 @@
       <div class="test-btn-group">
         <button onclick="testImmediateNotification()" class="test-btn">
           <span style="font-size:1.2rem">🔔</span>
-          تجربة تنبيه (الآن)
+          تجربة آذان (الآن)
         </button>
-        <button onclick="testScheduledNotification()" class="test-btn">
-          <span style="font-size:1.2rem">⏳</span>
-          تجربة (بعد دقيقة)
+        <button onclick="testSalawatNotification()" class="test-btn" style="border-color: #80d090; color: #80d090;">
+          <span style="font-size:1.2rem">✨</span>
+          تجربة صلاة على النبي
         </button>
       </div>
       
@@ -968,6 +968,13 @@
       <div id="mobile-install-card" onclick="installPWA()" style="background:linear-gradient(135deg,var(--gold),var(--gold-bright));border:1px solid rgba(0,0,0,0.1);border-radius:16px;padding:25px;text-align:center;cursor:pointer;transition:transform 0.3s;display:none" class="tool-card">
         <div style="font-size:2.5rem;margin-bottom:10px">📲</div>
         <div style="font-family:var(--font-ar);color:var(--ink);font-weight:700">تثبيت التطبيق</div>
+      </div>
+
+      <!-- TELEGRAM DOWNLOAD CARD (Web only) -->
+      <div id="telegram-download-card" onclick="window.open('https://t.me/+nWBhm9M-umI3OGE0', '_blank')" style="background:linear-gradient(135deg,#0088cc,#00aaff);border:1px solid rgba(255,255,255,0.2);border-radius:16px;padding:25px;text-align:center;cursor:pointer;transition:transform 0.3s;display:none" class="tool-card">
+        <div style="font-size:2.5rem;margin-bottom:10px">🤖</div>
+        <div style="font-family:var(--font-ar);color:#fff;font-weight:700">تحميل تطبيق أندرويد</div>
+        <div style="font-size:0.75rem;color:rgba(255,255,255,0.9);margin-top:5px">عبر قناة التليجرام</div>
       </div>
     </div>
   </div>

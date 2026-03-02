@@ -119,6 +119,33 @@ async function testImmediateNotification() {
   }
 }
 
+async function testSalawatNotification() {
+  if (!isCapacitor) {
+    toast('⚠️ هذه الميزة تعمل فقط على تطبيق الأندرويد');
+    return;
+  }
+  const { LocalNotifications } = Capacitor.Plugins;
+  const msg = notifSettings.salawat_text || 'اللهم صلِّ وسلم على نبينا محمد';
+  const hasSound = notifSettings.salawat_sound !== false;
+
+  try {
+    await LocalNotifications.schedule({
+      notifications: [{
+        title: 'تجربة صلاة على النبي ﷺ',
+        body: msg,
+        id: 998,
+        schedule: { at: new Date(Date.now() + 1000) },
+        sound: hasSound ? 'salawat.mp3' : null,
+        channelId: 'salawat-channel'
+      }]
+    });
+    toast('✨ تم إرسال تنبيه الصلاة على النبي الآن');
+  } catch (err) {
+    console.error('Test salawat error:', err);
+    toast('❌ فشل إرسال التنبيه');
+  }
+}
+
 async function testScheduledNotification() {
   if (!isCapacitor) {
     toast('⚠️ هذه الميزة تعمل فقط على تطبيق الأندرويد');
@@ -349,9 +376,14 @@ window.addEventListener('load', () => {
   }
 
   // iOS Safari doesn't fire beforeinstallprompt, so we show a helpful install entry point.
-  // If the user taps it, we show the Add-to-Home-Screen instructions.
   if (isIOSDevice()) {
-    card.style.display = 'block';
+    if (card) card.style.display = 'block';
+  }
+
+  // Show telegram download card ONLY on web (not inside Capacitor app)
+  const tgCard = document.getElementById('telegram-download-card');
+  if (tgCard && !isCapacitor) {
+    tgCard.style.display = 'block';
   }
 });
 
@@ -2128,8 +2160,8 @@ function clickTasbeeh() {
 }
 
 function vibrateDevice(ms = 50) { 
-  if (isCapacitor) {
-    const { Haptics, ImpactStyle } = Capacitor.Plugins;
+  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics) {
+    const { Haptics, ImpactStyle } = window.Capacitor.Plugins;
     if (ms > 100) {
       Haptics.vibrate({ duration: ms });
     } else {
@@ -2158,7 +2190,7 @@ function closeAboutApp() {
 
 async function shareApp() {
   const shareText = 'تطبيق أثر - رفيقك في رمضان (صدقة جارية عن روح والدي رحمه الله). تابع عباداتك، واعرف مواقيت الصلاة، واختم القرآن.';
-  const shareUrl = 'https://osama-mater.github.io/Ramadan-Tracker/'; // رابط افتراضي حتى ترفع التطبيق
+  const shareUrl = 'https://t.me/+nWBhm9M-umI3OGE0';
 
   if (isCapacitor) {
     const { Share } = Capacitor.Plugins;
