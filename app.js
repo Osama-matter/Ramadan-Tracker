@@ -136,7 +136,7 @@ async function testSalawatNotification() {
         id: 998,
         schedule: { at: new Date(Date.now() + 1000) },
         sound: hasSound ? 'salawat.mp3' : null,
-        channelId: 'salawat-channel'
+        channelId: 'salawat-channel-v2'
       }]
     });
     toast('✨ تم إرسال تنبيه الصلاة على النبي الآن');
@@ -193,6 +193,11 @@ async function scheduleSalawatNotifications() {
   const { LocalNotifications } = Capacitor.Plugins;
   
   try {
+    const perm = await LocalNotifications.checkPermissions();
+    if (perm.display !== 'granted') {
+      await LocalNotifications.requestPermissions();
+    }
+
     const notifications = [];
     const now = new Date();
     const intervalMinutes = notifSettings.salawat_interval || 60;
@@ -210,7 +215,7 @@ async function scheduleSalawatNotifications() {
     let nextTime = new Date(now.getTime() + intervalMinutes * 60 * 1000);
     for (let i = 1; i <= 50; i++) { // limit to 50 notifications
       const hour = nextTime.getHours();
-      // Only schedule between 8 AM and 11 PM
+      // Schedule reminders between 8 AM and 11 PM
       if (hour >= 8 && hour <= 23) {
         notifications.push({
           title: 'صلِّ على النبي ﷺ',
@@ -245,6 +250,7 @@ async function scheduleAdhanNotifications(pt) {
       try {
         await LocalNotifications.deleteChannel({ id: 'adhan-channel' });
         await LocalNotifications.deleteChannel({ id: 'salawat-channel' });
+        await LocalNotifications.deleteChannel({ id: 'salawat-channel-v2' });
       } catch(e) {}
 
       await LocalNotifications.createChannel({
@@ -260,7 +266,7 @@ async function scheduleAdhanNotifications(pt) {
       await LocalNotifications.createChannel({
         id: 'salawat-channel',
         name: 'Salawat Reminders',
-        description: 'Hourly reminders to pray for Prophet Muhammad ﷺ',
+        description: 'Periodic reminders to pray for Prophet Muhammad ﷺ',
         importance: 4,
         visibility: 1,
         sound: 'salawat.mp3',
@@ -1701,9 +1707,123 @@ function startCountdown(t) {
   countdownInterval = setInterval(() => updateCountdown(t), 1000);
 }
 
+async function requestNotificationPermissions() {
+  if (!isCapacitor) return;
+  const { LocalNotifications } = Capacitor.Plugins;
+  try {
+    const perm = await LocalNotifications.checkPermissions();
+    if (perm.display !== 'granted') {
+      const result = await LocalNotifications.requestPermissions();
+      if (result.display === 'granted') {
+        toast('✅ تم تفعيل أذونات التنبيهات');
+        if (prayerData) {
+          updateBackgroundNotification(prayerData);
+          if (notifSettings.salawat) scheduleSalawatNotifications();
+        }
+      } else {
+        toast('⚠️ يرجى تفعيل التنبيهات من إعدادات الهاتف لضمان عمل الآذان');
+      }
+    }
+  } catch (e) {
+    console.error('Permission request error', e);
+  }
+}
+
+async function updateBackgroundNotification(t) {
+  if (!isCapacitor || !t || !t.Maghrib) return;
+  const { LocalNotifications } = Capacitor.Plugins;
+  
+  // Request permission explicitly
+  try {
+    const perm = await LocalNotifications.checkPermissions();
+    if (perm.display !== 'granted') {
+      await LocalNotifications.requestPermissions();
+    }
+  } catch (e) { console.error("Permission check error", e); }
+
+  const now = new Date();
+  const nowSecs = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+  const order = ['Imsak', 'Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+  
+  let nextKey = null;
+  let nextSecs = null;
+  for (const key of order) {
+    if (!t[key]) continue;
+    const [h, m] = t[key].split(':').map(Number);
+    const secs = h * 3600 + m * 60;
+    if (secs > nowSecs) { nextKey = key; nextSecs = secs; break; }
+  }
+
+  let label = '';
+  let targetTime = null;
+
+  if (!nextKey) {
+    const [ih, im] = t.Imsak ? t.Imsak.split(':').map(Number) : t.Fajr.split(':').map(Number);
+    label = 'حتى إمساك الغد';
+    targetTime = new Date();
+    targetTime.setDate(targetTime.getDate() + 1);
+    targetTime.setHours(ih, im, 0, 0);
+  } else {
+    const [h, m] = t[nextKey].split(':').map(Number);
+    label = `حتى ${(PRAYER_NAMES[nextKey] || nextKey)}`;
+    targetTime = new Date();
+    targetTime.setHours(h, m, 0, 0);
+  }
+
+  try {
+    // Create channel for persistent notification if it doesn't exist
+    if (Capacitor.getPlatform() === 'android') {
+      await LocalNotifications.createChannel({
+        id: 'prayer-timer-channel',
+        name: 'Prayer Timer',
+        description: 'Persistent prayer countdown timer',
+        importance: 5, // LOW importance to be silent
+        visibility: 1
+      });
+    }
+
+    await LocalNotifications.schedule({
+      notifications: [{
+        id: 9999,
+        title: 'تطبيق أثر - الصلاة القادمة',
+        body: label,
+        ongoing: true,
+        autoCancel: false,
+        silent: true,
+        channelId: 'prayer-timer-channel',
+        schedule: { at: new Date() },
+        extra: { 
+          type: 'countdown',
+          chronometer: true,
+          chronometerCountDown: true,
+          chronometerBase: targetTime.getTime()
+        },
+        // Android Specific
+        foreground: true,
+        priority: 1
+      }]
+    });
+    console.log("BG Notification scheduled for:", label, targetTime);
+  } catch (err) {
+    console.error('Update BG Notif Error:', err);
+  }
+}
+
 /* FIX: updateCountdown — handles midnight rollover, Imsak countdown for suhoor */
 function updateCountdown(t) {
   if (!t || !t.Maghrib) return;
+  
+  // Update background notification if on mobile only once when prayer changes
+  if (isCapacitor) {
+    const now = new Date();
+    const currentPrayerKey = getNextPrayerKey(t);
+    // تحديث الإشعار في شريط الحالة فقط عند تغير الصلاة القادمة أو كل ساعة لضمان استمراره
+    if (!window._lastPrayerKey || window._lastPrayerKey !== currentPrayerKey || !window._lastBgUpdate || (now - window._lastBgUpdate > 3600000)) {
+      updateBackgroundNotification(t);
+      window._lastBgUpdate = now;
+      window._lastPrayerKey = currentPrayerKey;
+    }
+  }
   const now     = new Date();
   const nowSecs = now.getHours()*3600 + now.getMinutes()*60 + now.getSeconds();
   const order   = ['Imsak','Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'];
@@ -2541,8 +2661,247 @@ function updateToggleUI(key, isOn) {
   };
   const el = document.getElementById(idMap[key]);
   if (el) el.classList.toggle('on', !!isOn);
+  
+  // Update nav notification icon if needed
+  updateNavNotifIcon();
 }
 
+function updateNavNotifIcon() {
+  const badge = document.getElementById('notif-badge');
+  const anyOn = Object.values(notifSettings).some(v => v === true);
+  if (badge) badge.style.display = anyOn ? 'flex' : 'none';
+}
+
+/* ════ AI ASSISTANT (GEMINI AI) UPDATED ════ */
+const GEMINI_API_KEY = "AIzaSyCbrZ6S5xCCQQKZQq0QDzfiDyTVqn2rh-8";
+
+// قائمة النماذج المتاحة في حسابك مرتبة حسب الأولوية القصوى والسعة
+const AVAILABLE_MODELS = [
+    "models/gemma-3-27b-it",   // حصة ضخمة جداً (14.4K) وأداء عالي
+    "models/gemma-3-12b-it",   // حصة ضخمة جداً (14.4K)
+    "models/gemma-3-4b-it",    // حصة ضخمة جداً (14.4K)
+    "models/gemini-2.5-flash", // حصة (20) لم تستهلك
+    "models/gemini-1.5-flash", // حصة مستقرة
+    "models/gemini-3-flash"    // النموذج الذي استهلكت حصته (23/20)
+];
+
+const AI_CHAT_HISTORY_KEY = 'rm47_ai_chat_history_v1';
+const AI_MAX_HISTORY_TURNS = 10;
+
+let aiPrevSection = 'tracker';
+let aiChatHistory = [];
+
+// متغيرات التحكم لمنع التكرار (Debounce) والانتظار (Cooldown)
+let isAiProcessing = false;
+let lastRequestTime = 0;
+const COOLDOWN_DURATION = 3000; // 3 ثوانٍ
+
+function loadAIChatHistory() {
+  try {
+    const raw = localStorage.getItem(AI_CHAT_HISTORY_KEY);
+    aiChatHistory = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(aiChatHistory)) aiChatHistory = [];
+  } catch {
+    aiChatHistory = [];
+  }
+}
+
+function saveAIChatHistory() {
+  try {
+    localStorage.setItem(AI_CHAT_HISTORY_KEY, JSON.stringify(aiChatHistory.slice(-AI_MAX_HISTORY_TURNS * 2)));
+  } catch {}
+}
+
+function pushToHistory(role, text) {
+  if (!text) return;
+  aiChatHistory.push({ role, parts: [{ text }] });
+  aiChatHistory = aiChatHistory.slice(-AI_MAX_HISTORY_TURNS * 2);
+  saveAIChatHistory();
+}
+
+function openAIAssistant() {
+  const active = document.querySelector('.section.active');
+  if (active && active.id && active.id.startsWith('section-')) {
+    aiPrevSection = active.id.replace('section-', '') || 'tracker';
+  }
+
+  if (typeof showSection === 'function') {
+    showSection('ai');
+  }
+
+  const messages = document.getElementById('chat-messages');
+  if (messages && messages.children.length === 0) {
+    addAIMessage('مرحبًا! أنا مساعدك الذكي في تطبيق "أثر". كيف يمكنني مساعدتك اليوم؟');
+  }
+
+  const input = document.getElementById('chat-input');
+  if (input) setTimeout(() => input.focus(), 60);
+}
+
+function closeAIAssistant() {
+  if (typeof showSection === 'function') {
+    showSection(aiPrevSection || 'tracker');
+  }
+}
+
+function addUserMessage(text) {
+  const messagesContainer = document.getElementById('chat-messages');
+  if (!messagesContainer) return;
+  const div = document.createElement('div');
+  div.className = 'message user-message';
+  div.textContent = text;
+  messagesContainer.appendChild(div);
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function addAIMessage(text) {
+  const messagesContainer = document.getElementById('chat-messages');
+  if (!messagesContainer) return;
+  const div = document.createElement('div');
+  div.className = 'message ai-message';
+  div.textContent = text;
+  messagesContainer.appendChild(div);
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function showTypingIndicator() {
+  const messagesContainer = document.getElementById('chat-messages');
+  if (!messagesContainer) return;
+  if (document.getElementById('typing-indicator')) return;
+  const div = document.createElement('div');
+  div.className = 'typing-indicator';
+  div.id = 'typing-indicator';
+  div.textContent = 'المساعد يفكر...';
+  messagesContainer.appendChild(div);
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function removeTypingIndicator() {
+  document.getElementById('typing-indicator')?.remove();
+}
+
+function looksTruncated(text) {
+  if (!text) return false;
+  const t = String(text).trim();
+  // إذا انتهى النص بعلامة ترقيم نهائية، فهو غالباً غير مقطوع
+  const endsWithPunctuation = /[\.!؟\?…\)\]\}"'»\n]$/.test(t);
+  if (endsWithPunctuation) return false;
+  // إذا كان النص طويلاً ولم ينتهِ بنقطة، فغالباً هو مقطوع
+  return t.length > 500;
+}
+
+async function fetchGeminiResponse(userQuery, extraHistory = []) {
+    // محاولة التنقل بين النماذج المتاحة في حال فشل أحدها
+    for (let modelName of AVAILABLE_MODELS) {
+        try {
+            const url = `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
+            
+            const systemPrompt = `أنت مساعد ذكي لتطبيق "أثر" (رفيق المسلم في رمضان ١٤٤٧ هـ). 
+            التطبيق من تطوير "أسامة مطر" كصدقة جارية عن روح والده رحمه الله.
+            أجب باللغة العربية بأسلوب ودود وإيماني ومفيد.`;
+
+            const contents = [
+                { role: "user", parts: [{ text: `التعليمات: ${systemPrompt}` }] },
+                { role: "model", parts: [{ text: "فهمت، سألتزم بالتعليمات." }] }
+            ];
+
+            const mergedHistory = [...aiChatHistory, ...(Array.isArray(extraHistory) ? extraHistory : [])];
+            mergedHistory.forEach(item => { if(item.role && item.parts) contents.push(item); });
+            contents.push({ role: 'user', parts: [{ text: userQuery }] });
+
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    contents, 
+                    generationConfig: { 
+                      maxOutputTokens: 2048, 
+                      temperature: 0.7 
+                    } 
+                })
+            });
+
+            const data = await res.json();
+
+            // إذا انتهت الحصة (429) أو النموذج غير موجود، جرب النموذج التالي في القائمة
+            if (res.status === 429 || res.status === 404) {
+                console.warn(`النموذج ${modelName} غير متاح حالياً، جاري تجربة البديل...`);
+                continue; 
+            }
+
+            if (data.error) {
+                console.error(`Gemini Error Details (${modelName}):`, data.error);
+                continue; // Try next model if any other error
+            }
+
+            if (data.candidates && data.candidates[0].content) {
+                return data.candidates[0].content.parts.map(p => p.text).join('');
+            }
+        } catch (e) {
+            console.error(`خطأ في النموذج ${modelName}:`, e);
+        }
+    }
+    return "⚠️ عذراً، جميع النماذج مشغولة حالياً. يرجى المحاولة لاحقاً.";
+}
+
+async function getGeminiReplyWithAutoContinue(userText) {
+  const reply1 = await fetchGeminiResponse(userText);
+  if (!looksTruncated(reply1)) return reply1;
+
+  const contPrompt = 'أكمل من حيث توقفت في إجابتك السابقة، بدون إعادة ما سبق، واختتم بجملة كاملة.';
+  const extraHistory = [{ role: 'model', parts: [{ text: reply1 }] }];
+  const reply2 = await fetchGeminiResponse(contPrompt, extraHistory);
+  const merged = [reply1, reply2].filter(Boolean).join('\n');
+  return merged.trim();
+}
+
+async function sendChatMessage() {
+    const input = document.getElementById('chat-input');
+    const text = (input?.value || '').trim();
+    if (!text) return;
+
+    // تفعيل الـ Debounce والـ Cooldown
+    const now = Date.now();
+    if (isAiProcessing || (now - lastRequestTime < COOLDOWN_DURATION)) {
+        console.warn("Processing or Cooldown active.");
+        return;
+    }
+
+    isAiProcessing = true;
+    lastRequestTime = now;
+
+    addUserMessage(text);
+    pushToHistory('user', text);
+    if (input) input.value = '';
+
+    showTypingIndicator();
+    try {
+        const reply = await getGeminiReplyWithAutoContinue(text);
+        removeTypingIndicator();
+        addAIMessage(reply);
+        pushToHistory('model', reply);
+    } catch (err) {
+        console.error('AI error:', err);
+        removeTypingIndicator();
+        addAIMessage('⚠️ حدث خطأ في المساعد.');
+    } finally {
+        isAiProcessing = false; // إعادة السماح بالإرسال
+    }
+}
+
+window.addEventListener('load', () => {
+  loadAIChatHistory();
+
+  const input = document.getElementById('chat-input');
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendChatMessage();
+      }
+    });
+  }
+});
 function loadNotifSettings() {
   try { notifSettings = JSON.parse(storage.getItem('rm47_notif') || '{}'); } catch { notifSettings = {}; }
   
@@ -2584,13 +2943,25 @@ function toggleNotif(key) {
   if (key === 'salawat') {
     const salawatSettings = document.getElementById('salawat-custom-settings');
     if (salawatSettings) salawatSettings.style.display = notifSettings.salawat ? 'block' : 'none';
-    if (notifSettings.salawat) scheduleSalawatNotifications();
+    if (notifSettings.salawat) {
+      requestNotificationPermissions().then(() => {
+        scheduleSalawatNotifications();
+      });
+    }
   }
   else if (key === 'salawat_sound') {
     if (notifSettings.salawat) scheduleSalawatNotifications();
   }
   else if (key === 'adhan_voice' && prayerData) {
-    scheduleAdhanNotifications(prayerData);
+    requestNotificationPermissions().then(() => {
+      scheduleAdhanNotifications(prayerData);
+    });
+  }
+  else if (prayerData) {
+    // Re-schedule everything when any toggle changes to ensure system updates
+    requestNotificationPermissions().then(() => {
+      scheduleAdhanNotifications(prayerData);
+    });
   }
   
   toast(isOn ? 'تم تفعيل التنبيه' : 'تم إيقاف التنبيه');

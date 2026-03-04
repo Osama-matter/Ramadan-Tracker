@@ -18,15 +18,9 @@
 <body>
 
 
-<!-- THEME TOGGLE -->
-<button id="theme-toggle" onclick="toggleTheme()" title="تغيير الثيم">🌙</button>
+<!-- Removed floating toggles to move them to nav bar -->
 
-<!-- NOTIFICATION BELL -->
-<div style="position:fixed;bottom:24px;left:20px;z-index:500">
-  <button id="notif-btn" onclick="toggleNotifPanel()" title="التنبيهات" style="position:relative;width:48px;height:48px;border-radius:50%;background:rgba(13,19,72,0.85);border:1px solid rgba(196,145,42,0.4);color:var(--gold-bright);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.4);transition:var(--tr);backdrop-filter:blur(8px)">
-    🔔<span id="notif-badge" style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:#e84040;border-radius:50%;font-size:0.55rem;display:none;align-items:center;justify-content:center;color:#fff">!</span>
-  </button>
-</div>
+<!-- Removed floating AI button to move it to nav bar -->
 
   <!-- NOTIFICATION PANEL -->
 <div id="notif-panel">
@@ -47,7 +41,14 @@
   <a href="javascript:void(0)" class="mobile-nav-item active" onclick="showSection('tracker', this)"><span>📅</span>المتابعة</a>
   <a href="javascript:void(0)" class="mobile-nav-item" onclick="showSection('prayer', this)"><span>🕌</span>المواقيت</a>
   <a href="javascript:void(0)" class="mobile-nav-item" onclick="showSection('quran-read', this)"><span>📖</span>القرآن</a>
-  <a href="javascript:void(0)" class="mobile-nav-item" onclick="showSection('tasbeeh', this)"><span>📿</span>الأذكار</a>
+    <div class="mobile-nav-item" onclick="showSection('tasbeeh', this)">
+      <div class="nav-icon">📿</div>
+      <div class="nav-text">الأذكار</div>
+    </div>
+    <div class="mobile-nav-item" onclick="openAIAssistant()">
+      <div class="nav-icon">🤖</div>
+      <div class="nav-text">المساعد</div>
+    </div>
   <a href="javascript:void(0)" class="mobile-nav-item" onclick="showSection('more', this)"><span>☰</span>المزيد</a>
 </div>
 
@@ -77,6 +78,14 @@
   <div class="nav-logo">
     <img src="Imge/logo.png" alt="أثر" style="height: 32px; width: 32px; object-fit: contain; vertical-align: middle; margin-left: 8px;">
     أثر
+  </div>
+  <div class="nav-right-actions" style="display: flex; align-items: center; gap: 12px;">
+    <!-- THEME TOGGLE -->
+    <button id="theme-toggle-nav" onclick="toggleTheme()" title="تغيير الثيم" style="background:none; border:none; font-size:1.2rem; cursor:pointer;">🌙</button>
+    <!-- NOTIFICATION BELL -->
+    <button id="notif-btn-nav" onclick="toggleNotifPanel()" title="التنبيهات" style="position:relative; background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--gold-bright);">
+      🔔<span id="notif-badge" style="position:absolute; top:-4px; right:-4px; width:14px; height:16px; background:#e84040; border-radius:50%; font-size:0.55rem; display:none; align-items:center; justify-content:center; color:#fff">!</span>
+    </button>
   </div>
   <div class="nav-links-overlay" id="nav-overlay" onclick="toggleMenu()"></div>
   <div class="nav-links" id="nav-links">
@@ -170,6 +179,36 @@
 </div>
 
 <div class="page">
+
+<<div id="section-ai" class="section">
+  <div class="ai-page">
+    <div class="ai-page-head">
+      <button class="ai-back" onclick="closeAIAssistant()" aria-label="رجوع">←</button>
+      <div class="ai-head">
+        <div class="ai-title">🌙 المساعد</div>
+        <div class="ai-sub">مساعد ذكي داخل التطبيق</div>
+      </div>
+      <div class="ai-head-spacer"></div>
+    </div>
+
+    <div class="ai-page-body">
+      <div id="chat-messages" class="chat-messages"></div>
+      <div class="chat-input-row">
+        <input 
+          id="chat-input" 
+          class="chat-input" 
+          type="text" 
+          inputmode="text" 
+          placeholder="اكتب سؤالك…" 
+          autocomplete="off" 
+        />
+        <button class="chat-send" onclick="sendChatMessage()">
+          إرسال ✦
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ════ SECTION: TRACKER ════ -->
 <div id="section-tracker" class="section active">
