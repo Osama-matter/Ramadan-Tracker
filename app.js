@@ -174,8 +174,12 @@ async function testScheduledNotification() {
 }
 
 function updateSalawatSettings() {
-  const interval = document.getElementById('salawat-interval').value;
-  const text = document.getElementById('salawat-text').value;
+  const intervalEl = document.getElementById('salawat-interval');
+  const textEl = document.getElementById('salawat-text');
+  if (!intervalEl || !textEl) return;
+
+  const interval = intervalEl.value;
+  const text = textEl.value;
   
   notifSettings.salawat_interval = parseInt(interval);
   notifSettings.salawat_text = text || 'اللهم صلِّ وسلم على نبينا محمد';
@@ -555,21 +559,27 @@ function switchQuranMode(mode) {
 }
 
 async function loadSurah() {
-  const id = document.getElementById('quran-surah-select').value;
+  const selectEl = document.getElementById('quran-surah-select');
+  if (!selectEl) return;
+  const id = selectEl.value;
   if (!id) return;
   currentQuranRef = { type: 'surah', id: parseInt(id) };
   await fetchAndDisplayQuran(`https://api.alquran.cloud/v1/surah/${id}/quran-uthmani`);
 }
 
 async function loadJuz() {
-  const id = document.getElementById('quran-juz-select').value;
+  const selectEl = document.getElementById('quran-juz-select');
+  if (!selectEl) return;
+  const id = selectEl.value;
   if (!id) return;
   currentQuranRef = { type: 'juz', id: parseInt(id) };
   await fetchAndDisplayQuran(`https://api.alquran.cloud/v1/juz/${id}/quran-uthmani`);
 }
 
 async function loadPage() {
-  const id = document.getElementById('quran-page-input').value;
+  const inputEl = document.getElementById('quran-page-input');
+  if (!inputEl) return;
+  const id = inputEl.value;
   if (!id || id < 1 || id > 604) { toast('يرجى إدخال رقم صفحة صحيح (١-٦٠٤)'); return; }
   currentQuranRef = { type: 'page', id: parseInt(id) };
   await fetchAndDisplayQuran(`https://api.alquran.cloud/v1/page/${id}/quran-uthmani`);
@@ -804,41 +814,43 @@ const storage = {
 
 /* ════ SKY CANVAS ════ */
 const canvas = document.getElementById('sky-canvas');
-const ctx = canvas.getContext('2d');
-let stars = [], W, H;
-function resizeSky() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
-function buildStars() {
-  stars = Array.from({length:160}, () => ({
-    x:Math.random()*W, y:Math.random()*H*0.75,
-    r:Math.random()*1.4+0.3,
-    a:Math.random(), da:(Math.random()*.006+.002)*(Math.random()<.5?1:-1),
-    dx:Math.random()*.08-.04,
-  }));
+if (canvas) {
+  const ctx = canvas.getContext('2d');
+  let stars = [], W, H;
+  function resizeSky() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  function buildStars() {
+    stars = Array.from({length:160}, () => ({
+      x:Math.random()*W, y:Math.random()*H*0.75,
+      r:Math.random()*1.4+0.3,
+      a:Math.random(), da:(Math.random()*.006+.002)*(Math.random()<.5?1:-1),
+      dx:Math.random()*.08-.04,
+    }));
+  }
+  function drawSky() {
+    const h = new Date().getHours();
+    const isNight = h < 6 || h >= 19;
+    const g = ctx.createLinearGradient(0,0,0,H);
+    if (isNight)      { g.addColorStop(0,'#010510'); g.addColorStop(1,'#06122e'); }
+    else if (h < 7)   { g.addColorStop(0,'#1a2050'); g.addColorStop(1,'#6e3a1e'); }
+    else if (h < 17)  { g.addColorStop(0,'#0d2455'); g.addColorStop(1,'#1a4a88'); }
+    else              { g.addColorStop(0,'#1a1040'); g.addColorStop(1,'#7a3a15'); }
+    ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+    stars.forEach(s => {
+      s.a += s.da; if(s.a>1||s.a<0) s.da*=-1;
+      s.x += s.dx; if(s.x<0) s.x=W; if(s.x>W) s.x=0;
+      const alpha = isNight ? s.a*.9 : s.a*.1;
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle = `rgba(255,240,160,${alpha})`; ctx.fill();
+      if(isNight && s.r>1.1) {
+        ctx.beginPath(); ctx.arc(s.x,s.y,s.r*2.5,0,Math.PI*2);
+        ctx.fillStyle = `rgba(255,220,120,${alpha*.14})`; ctx.fill();
+      }
+    });
+    requestAnimationFrame(drawSky);
+  }
+  window.addEventListener('resize', () => { resizeSky(); buildStars(); });
+  resizeSky(); buildStars(); drawSky();
 }
-function drawSky() {
-  const h = new Date().getHours();
-  const isNight = h < 6 || h >= 19;
-  const g = ctx.createLinearGradient(0,0,0,H);
-  if (isNight)      { g.addColorStop(0,'#010510'); g.addColorStop(1,'#06122e'); }
-  else if (h < 7)   { g.addColorStop(0,'#1a2050'); g.addColorStop(1,'#6e3a1e'); }
-  else if (h < 17)  { g.addColorStop(0,'#0d2455'); g.addColorStop(1,'#1a4a88'); }
-  else              { g.addColorStop(0,'#1a1040'); g.addColorStop(1,'#7a3a15'); }
-  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
-  stars.forEach(s => {
-    s.a += s.da; if(s.a>1||s.a<0) s.da*=-1;
-    s.x += s.dx; if(s.x<0) s.x=W; if(s.x>W) s.x=0;
-    const alpha = isNight ? s.a*.9 : s.a*.1;
-    ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-    ctx.fillStyle = `rgba(255,240,160,${alpha})`; ctx.fill();
-    if(isNight && s.r>1.1) {
-      ctx.beginPath(); ctx.arc(s.x,s.y,s.r*2.5,0,Math.PI*2);
-      ctx.fillStyle = `rgba(255,220,120,${alpha*.14})`; ctx.fill();
-    }
-  });
-  requestAnimationFrame(drawSky);
-}
-window.addEventListener('resize', () => { resizeSky(); buildStars(); });
-resizeSky(); buildStars(); drawSky();
 
 /* ════ NAVIGATION ════ */
 function toggleMenu() {
@@ -1422,6 +1434,7 @@ function updateOverall() {
 function renderCalendar() { buildCalendar(); }
 function buildCalendar() {
   const cal = document.getElementById('calendar');
+  if (!cal) return;
   const today = rday();
   cal.innerHTML = '';
   for(let d=1;d<=TOTAL;d++) {
@@ -1429,7 +1442,8 @@ function buildCalendar() {
     const dt = dayDate(d);
     const st = d===today?'today':d<today?'past':'future';
     const cc = full(d)?' complete':'';
-    const bgs = TASKS.filter(t=>dd(d)[t.id]).map(t=>`<span class="dc-badge">${t.badge}</span>`).join('');
+    const currentDayTasks = (typeof TASKS !== 'undefined') ? TASKS.filter(t=>dd(d)[t.id]) : [];
+    const bgs = currentDayTasks.map(t=>`<span class="dc-badge">${t.badge}</span>`).join('');
     const card = document.createElement('div');
     card.className = `day-card ${st}${cc}`;
     card.style.setProperty('--i',d);
@@ -1516,13 +1530,27 @@ function toggleTask(d, tid) {
   if(!prev && full(d)) setTimeout(()=>toast(`🌟 اليوم ${d} مكتمل — ماشاء الله!`), 500);
 }
 function toggleDua() {
-  document.getElementById('dua-panel').classList.toggle('open');
-  document.getElementById('dua-btn').classList.toggle('active');
+  const panel = document.getElementById('dua-panel');
+  const btn = document.getElementById('dua-btn');
+  if (panel) panel.classList.toggle('open');
+  if (btn) btn.classList.toggle('active');
 }
 
-document.getElementById('overlay').addEventListener('click', e => { if(e.target===document.getElementById('overlay')) closeModal(); });
-document.getElementById('modal-close-btn').addEventListener('click', closeModal);
-document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+const overlayEl = document.getElementById('overlay');
+if (overlayEl) {
+  overlayEl.addEventListener('click', e => { 
+    if(e.target === overlayEl) closeModal(); 
+  });
+}
+
+const modalCloseBtn = document.getElementById('modal-close-btn');
+if (modalCloseBtn) {
+  modalCloseBtn.addEventListener('click', closeModal);
+}
+
+document.addEventListener('keydown', e => { 
+  if(e.key === 'Escape') closeModal(); 
+});
 
 /* ════════════════════════════════════
    PRAYER TIMES  (FIX: full rewrite)
@@ -1556,11 +1584,14 @@ var CITIES = {
 var PRAYER_NAMES = { Fajr:'الفجر', Sunrise:'الشروق', Dhuhr:'الظهر', Asr:'العصر', Maghrib:'المغرب', Isha:'العشاء', Imsak:'الإمساك' };
 var PRAYER_ICONS = { Fajr:'🌙', Sunrise:'🌄', Dhuhr:'☀️', Asr:'🌤', Maghrib:'🌅', Isha:'🌌', Imsak:'🌙' };
 
-/* FIX: updateCities — properly syncs dropdown */
+/* FIX: updateCities — properly sync dropdown */
 function updateCities(selectedCity) {
-  const country = document.getElementById('prayer-country').value;
+  const countryEl = document.getElementById('prayer-country');
   const cityEl  = document.getElementById('prayer-city');
-  const cities  = CITIES[country] || [];
+  if (!countryEl || !cityEl) return;
+
+  const country = countryEl.value;
+  const cities  = (typeof CITIES !== 'undefined' && CITIES[country]) ? CITIES[country] : [];
   cityEl.innerHTML = cities.map(c => {
     const [ar, en] = c.split(':');
     return `<option value="${en}">${ar}</option>`;
@@ -1570,8 +1601,12 @@ function updateCities(selectedCity) {
 
 /* FIX: savePrayerLocation — was missing entirely */
 function savePrayerLocation() {
-  const country = document.getElementById('prayer-country').value;
-  const city    = document.getElementById('prayer-city').value;
+  const countryEl = document.getElementById('prayer-country');
+  const cityEl = document.getElementById('prayer-city');
+  if (!countryEl || !cityEl) return;
+
+  const country = countryEl.value;
+  const city    = cityEl.value;
   storage.setItem('rm47_prayer_location', JSON.stringify({ country, city }));
 }
 
@@ -2673,14 +2708,14 @@ function updateNavNotifIcon() {
 }
 
 /* ════ AI ASSISTANT (GEMINI AI) UPDATED ════ */
-const GEMINI_API_KEY = "AIzaSyCbrZ6S5xCCQQKZQq0QDzfiDyTVqn2rh-8";
+
 
 // قائمة النماذج المتاحة في حسابك مرتبة حسب الأولوية القصوى والسعة
 const AVAILABLE_MODELS = [
-    "models/gemma-3-27b-it",   // حصة ضخمة جداً (14.4K) وأداء عالي
+    "models/gemini-2.5-flash", // حصة (20) - أولاً لأنه الأفضل أداءً حالياً
+    "models/gemma-3-27b-it",   // حصة ضخمة جداً (14.4K)
     "models/gemma-3-12b-it",   // حصة ضخمة جداً (14.4K)
     "models/gemma-3-4b-it",    // حصة ضخمة جداً (14.4K)
-    "models/gemini-2.5-flash", // حصة (20) لم تستهلك
     "models/gemini-1.5-flash", // حصة مستقرة
     "models/gemini-3-flash"    // النموذج الذي استهلكت حصته (23/20)
 ];
@@ -2695,6 +2730,8 @@ let aiChatHistory = [];
 let isAiProcessing = false;
 let lastRequestTime = 0;
 const COOLDOWN_DURATION = 3000; // 3 ثوانٍ
+
+const GEMINI_API_KEY = typeof CONFIG !== 'undefined' ? CONFIG.GEMINI_API_KEY : "";
 
 function loadAIChatHistory() {
   try {

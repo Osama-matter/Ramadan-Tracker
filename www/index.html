@@ -12,15 +12,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Scheherazade+New:wght@400;500;700&family=Cinzel+Decorative:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="./site.css">
 <script src="./adhkar_data.js" defer></script>
-<script src="./app.js" defer></script>
+    <script src="config.js"></script>
+    <script src="app.js"></script>
 <link  rel="icon" href="./Imge/lamp.png">
 </head>
 <body>
 
 
 <!-- Removed floating toggles to move them to nav bar -->
-
-<!-- Removed floating AI button to move it to nav bar -->
 
   <!-- NOTIFICATION PANEL -->
 <div id="notif-panel">
@@ -41,14 +40,14 @@
   <a href="javascript:void(0)" class="mobile-nav-item active" onclick="showSection('tracker', this)"><span>📅</span>المتابعة</a>
   <a href="javascript:void(0)" class="mobile-nav-item" onclick="showSection('prayer', this)"><span>🕌</span>المواقيت</a>
   <a href="javascript:void(0)" class="mobile-nav-item" onclick="showSection('quran-read', this)"><span>📖</span>القرآن</a>
-    <div class="mobile-nav-item" onclick="showSection('tasbeeh', this)">
-      <div class="nav-icon">📿</div>
-      <div class="nav-text">الأذكار</div>
-    </div>
-    <div class="mobile-nav-item" onclick="openAIAssistant()">
-      <div class="nav-icon">🤖</div>
-      <div class="nav-text">المساعد</div>
-    </div>
+  <div class="mobile-nav-item" onclick="showSection('tasbeeh', this)">
+    <div class="nav-icon">📿</div>
+    <div class="nav-text">الأذكار</div>
+  </div>
+  <div class="mobile-nav-item" onclick="openAIAssistant()">
+    <div class="nav-icon">🤖</div>
+    <div class="nav-text">المساعد</div>
+  </div>
   <a href="javascript:void(0)" class="mobile-nav-item" onclick="showSection('more', this)"><span>☰</span>المزيد</a>
 </div>
 
@@ -180,7 +179,7 @@
 
 <div class="page">
 
-<<div id="section-ai" class="section">
+<div id="section-ai" class="section">
   <div class="ai-page">
     <div class="ai-page-head">
       <button class="ai-back" onclick="closeAIAssistant()" aria-label="رجوع">←</button>
@@ -209,7 +208,6 @@
     </div>
   </div>
 </div>
-
 <!-- ════ SECTION: TRACKER ════ -->
 <div id="section-tracker" class="section active">
   <div class="hero hadith-hero">
@@ -999,6 +997,10 @@
         <div style="font-size:2.5rem;margin-bottom:10px">ℹ️</div>
         <div style="font-family:var(--font-ar);color:var(--gold-bright);font-weight:700">عن التطبيق</div>
       </div>
+      <div onclick="window.open('./privacy.html', '_blank')" style="background:rgba(13,19,72,0.8);border:1px solid rgba(196,145,42,0.3);border-radius:16px;padding:25px;text-align:center;cursor:pointer;transition:transform 0.3s" class="tool-card">
+        <div style="font-size:2.5rem;margin-bottom:10px">🔒</div>
+        <div style="font-family:var(--font-ar);color:var(--gold-bright);font-weight:700">سياسة الخصوصية</div>
+      </div>
       <div onclick="showSection('asmaul-husna')" style="background:rgba(13,19,72,0.8);border:1px solid rgba(196,145,42,0.5);border-radius:16px;padding:25px;text-align:center;cursor:pointer;transition:transform 0.3s" class="tool-card">
         <div style="font-size:2.5rem;margin-bottom:10px">✨</div>
         <div style="font-family:var(--font-ar);color:var(--gold-bright);font-weight:700">أسماء الله الحسنى</div>
@@ -1073,20 +1075,7 @@
 
 </div><!-- /page -->
 
-<div class="main-footer">
-  <div class="memorial-section">
-    <div class="memorial-frame">
-      <div class="memorial-photo-wrap">
-        <img src="Imge/Dad.png" class="memorial-photo" alt="رحمه الله">
-      </div>
-    </div>
-    <div class="memorial-ornament">✨ 🌙 ✨</div>
-    <h2 class="memorial-text">صدقة جارية على روح والدي رحمه الله</h2>
-    <div class="memorial-ornament">✦ ✦ ✦</div>
-    <div class="memorial-subtext">تم التطوير بواسطة <span style="color:var(--gold-bright)">أسامة مطر</span></div>
-    <div style="font-size:0.8rem; color:var(--gold-dim); margin-top:10px; font-family:var(--font-dec)">Developed by Osama Mater</div>
-    <div style="font-size:0.75rem; color:var(--ivory-soft); margin-top:15px">١٤٤٧ هـ — ٢٠٢٦ م</div>
-  </div>
+
 </div>
 
 <script>

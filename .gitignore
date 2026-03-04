@@ -8,3 +8,5 @@ ios/
 package-lock.json
 capacitor.config.json
 *.log
+www/config.js
+config.js
