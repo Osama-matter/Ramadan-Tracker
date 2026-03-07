@@ -24,10 +24,15 @@ jobs:
       - name: Build Web Project
         run: npm run build
 
-      - name: Capacitor Add/Sync iOS
+      - name: Capacitor Sync
         run: |
           npx cap add ios || true
           npx cap sync ios
+
+      - name: Set iOS Deployment Target
+        run: |
+          sed -i '' "s/platform :ios, '14.0'/platform :ios, '15.0'/g" ios/App/Podfile
+          cd ios/App && pod update
 
       - name: Build iOS App (Archive)
         run: |
