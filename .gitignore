@@ -2,7 +2,7 @@ node_modules/
 .DS_Store
 dist/
 android/
-ios/
+# ios/
 .idea/
 .vscode/
 # package-lock.json
