@@ -5,8 +5,8 @@ android/
 ios/
 .idea/
 .vscode/
-package-lock.json
-capacitor.config.json
+# package-lock.json
+# capacitor.config.json
 *.log
 www/config.js
 config.js
