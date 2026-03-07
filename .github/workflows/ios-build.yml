@@ -17,6 +17,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm install
@@ -25,13 +26,7 @@ jobs:
         run: npm run build
 
       - name: Capacitor Sync
-        run: |
-          npx cap sync ios
-          
-      - name: Setup CocoaPods
-        run: |
-          cd ios/App
-          pod install
+        run: npx cap sync ios
 
       - name: Build iOS App (Archive)
         run: |
@@ -39,10 +34,14 @@ jobs:
                      -scheme App \
                      -configuration Release \
                      -sdk iphoneos \
-                     -derivedDataPath build \
+                     -destination 'generic/platform=iOS' \
                      -archivePath build/App.xcarchive \
                      archive \
-                     CODE_SIGNING_ALLOWED=NO
+                     CODE_SIGNING_ALLOWED=NO \
+                     CODE_SIGNING_REQUIRED=NO \
+                     CODE_SIGN_IDENTITY="" \
+                     CODE_SIGN_ENTITLEMENTS="" \
+                     GCC_WARN_INHIBIT_ALL_WARNINGS=YES
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
