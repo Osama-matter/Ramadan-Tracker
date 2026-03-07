@@ -82,4 +82,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ios-archive
-          path: $GITHUB_WORKSPACE/build/App.xcarchive
+          path: build/App.xcarchive
