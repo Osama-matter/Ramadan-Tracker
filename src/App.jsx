@@ -36,7 +36,10 @@ import { NOTIFICATION_SERVICE } from './services/notificationService';
 import { FOREGROUND_SERVICE } from './services/foregroundService';
 import './index.css';
 
+import WebLandingPage from './components/WebLandingPage';
+
 function App() {
+  const isWeb = !window.Capacitor || !window.Capacitor.isNativePlatform();
   const [showSplash, setShowSplash] = useState(true);
   const [activeTab, setActiveTab] = useState('home');
   const [adhkarSubTab, setAdhkarSubTab] = useState(null);
@@ -230,6 +233,10 @@ function App() {
         return <div className="text-center py-20 text-white/50">قيد التطوير...</div>;
     }
   };
+
+  if (isWeb) {
+    return <WebLandingPage />;
+  }
 
   if (showSplash) {
     return <SplashScreen onFinish={() => setShowSplash(false)} />;
