@@ -1,0 +1,51 @@
+name: Build iOS App
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Web Project
+        run: npm run build
+
+      - name: Capacitor Sync
+        run: |
+          npx cap sync ios
+          
+      - name: Setup CocoaPods
+        run: |
+          cd ios/App
+          pod install
+
+      - name: Build iOS App (Archive)
+        run: |
+          xcodebuild -workspace ios/App/App.xcworkspace \
+                     -scheme App \
+                     -configuration Release \
+                     -sdk iphoneos \
+                     -derivedDataPath build \
+                     -archivePath build/App.xcarchive \
+                     archive \
+                     CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-archive
+          path: build/App.xcarchive
