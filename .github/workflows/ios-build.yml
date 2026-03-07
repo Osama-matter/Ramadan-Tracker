@@ -31,7 +31,8 @@ jobs:
 
       - name: Set iOS Deployment Target
         run: |
-          sed -i '' "s/platform :ios, '14.0'/platform :ios, '15.0'/g" ios/App/Podfile
+          sed -i '' "s/platform :ios, '14.0'/platform :ios, '16.0'/g" ios/App/Podfile
+          sed -i '' "s/platform :ios, '15.0'/platform :ios, '16.0'/g" ios/App/Podfile
           cd ios/App && pod update
 
       - name: Build iOS App (Archive)
