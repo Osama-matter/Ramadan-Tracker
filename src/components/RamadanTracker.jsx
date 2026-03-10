@@ -123,13 +123,16 @@ const RamadanTracker = () => {
       {showModal && selectedDay && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-          <div className="relative w-full max-w-md bg-white border border-black/10 rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-300 text-text-dark">
+          <div className="relative w-full max-w-md bg-surface dark:bg-[#1a1c23] border border-black/10 dark:border-white/10 rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-300 text-text-dark dark:text-gray-200">
             <div className="flex justify-between items-center mb-6">
               <div className="text-right">
                 <h3 className="text-xl font-bold text-gold font-scheherazade">مهام اليوم {selectedDay.arNum}</h3>
-                <p className="text-xs text-text-mid font-amiri">تقبل الله منا ومنكم صالح الأعمال</p>
+                <p className="text-[10px] text-text-mid dark:text-gray-400 font-bold uppercase tracking-tighter">Day Tracking</p>
               </div>
-              <button onClick={() => setShowModal(false)} className="w-8 h-8 flex items-center justify-center bg-black/5 rounded-full text-gold">✕</button>
+              <button 
+                onClick={() => setShowModal(false)}
+                className="w-10 h-10 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full text-gold-dark text-xl hover:bg-black/10 transition-colors"
+              >✕</button>
             </div>
 
             <div className="space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar px-1">

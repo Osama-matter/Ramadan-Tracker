@@ -90,7 +90,7 @@ const QadrWidget = () => {
                 onClick={() => setCurrentNight(n)}
                 className={`flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all duration-300 ${currentNight === n
                     ? 'bg-gold border-gold text-green-main shadow-lg scale-110'
-                    : 'bg-white dark:bg-white/10 border-black/5 dark:border-white/10 text-text-mid dark:text-gold-light/60'
+                    : 'bg-surface dark:bg-white/5 border-black/5 dark:border-white/10 text-text-mid dark:text-gold-light/60'
                   }`}
               >
                 <div className={`text-lg font-bold ${isOdd ? 'underline decoration-gold/50 underline-offset-4' : ''}`}>
@@ -117,7 +117,7 @@ const QadrWidget = () => {
               onClick={() => toggleAction(item.id)}
               className={`flex items-center gap-5 p-6 rounded-[2.2rem] border transition-all duration-500 text-right group shadow-sm ${completion[item.id]
                   ? 'bg-gold/15 border-gold/60 dark:bg-gold/20'
-                  : 'bg-white dark:bg-white/10 border-black/5 dark:border-white/20 hover:border-gold/30'
+                  : 'bg-surface dark:bg-white/5 border-black/5 dark:border-white/20 hover:border-gold/30'
                 }`}
             >
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl transition-all duration-700 ${completion[item.id] ? 'bg-gold text-green-main scale-110' : 'bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10'
@@ -160,7 +160,7 @@ const QadrWidget = () => {
           <span className="font-scheherazade text-3xl text-green-main dark:text-gold">خلوة الأذكار</span>
           <div className="h-[2px] w-12 bg-current"></div>
         </div>
-        <div className="bg-white dark:bg-white/5 rounded-[2.5rem] p-4 border border-black/5 dark:border-white/10 shadow-sm relative z-10">
+        <div className="bg-surface dark:bg-white/5 rounded-[2.5rem] p-4 border border-black/5 dark:border-white/10 shadow-sm relative z-10">
           <AdhkarSection type="qadr" />
         </div>
       </div>

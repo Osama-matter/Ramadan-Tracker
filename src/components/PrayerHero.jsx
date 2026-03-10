@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { usePrayerTimes } from '../hooks/usePrayerTimes';
+import { useSalahModeContext } from '../contexts/SalahModeContext';
 
 const PrayerHero = () => {
     const { timings, loading, error } = usePrayerTimes();
+    const { startSalahMode } = useSalahModeContext();
     const [nextPrayer, setNextPrayer] = useState({ name: '...', time: '...', diff: '...' });
 
     const prayerNamesAr = {
@@ -91,9 +93,18 @@ const PrayerHero = () => {
                     <div className="text-white text-3xl font-extrabold tracking-wide font-scheherazade">{nextPrayer.name}</div>
                     <div className="text-gold-light text-sm font-bold mt-1 tracking-wider">{nextPrayer.time}</div>
                 </div>
-                <div className="bg-gold/20 border border-gold/30 rounded-xl px-4 py-2 text-center shadow-inner min-w-[80px]">
-                    <div className="text-white/60 text-[10px] font-medium mb-1 tracking-widest">بعد</div>
-                    <div className="text-gold-light text-xl font-extrabold tabular-nums tracking-widest">{nextPrayer.diff}</div>
+                <div className="flex flex-col items-end gap-2">
+                    <div className="bg-gold/20 border border-gold/30 rounded-xl px-4 py-2 text-center shadow-inner min-w-[80px]">
+                        <div className="text-white/60 text-[10px] font-medium mb-1 tracking-widest">بعد</div>
+                        <div className="text-gold-light text-xl font-extrabold tabular-nums tracking-widest">{nextPrayer.diff}</div>
+                    </div>
+                    <button
+                        onClick={() => startSalahMode(10)}
+                        className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg border border-white/10 transition-colors text-[10px] font-bold text-white shadow-sm"
+                    >
+                        <span>وضع الصلاة</span>
+                        <span className="text-base leading-none">🕌</span>
+                    </button>
                 </div>
             </div>
 
@@ -109,8 +120,8 @@ const PrayerHero = () => {
                         <div
                             key={key}
                             className={`flex-1 text-center py-2.5 px-1 rounded-xl transition-all duration-300 ${isActive
-                                    ? 'bg-gradient-to-br from-gold/30 to-gold/10 border border-gold/40 shadow-md transform scale-105'
-                                    : 'bg-black/5 border border-black/5'
+                                ? 'bg-gradient-to-br from-gold/30 to-gold/10 border border-gold/40 shadow-md transform scale-105'
+                                : 'bg-black/5 border border-black/5'
                                 }`}
                         >
                             <div className={`text-[10px] mb-1.5 font-bold tracking-wider ${isActive ? 'text-gold-light' : 'text-text-mid'}`}>

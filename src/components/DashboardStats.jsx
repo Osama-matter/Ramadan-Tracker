@@ -28,20 +28,31 @@ const DashboardStats = ({ stats: propStats }) => {
   ];
 
   return (
-    <div className="mb-6 animate-in fade-in duration-500 delay-300">
-      <h2 className="text-[15px] font-bold text-text-dark mb-3 flex items-center gap-2">
-        <span className="w-1 h-5 bg-gradient-to-b from-gold to-green-light rounded-sm"></span>
-        إحصائياتك 📊
-      </h2>
-      <div className="grid grid-cols-3 gap-2.5">
+    <div className="mb-8 animate-in fade-in duration-700 delay-300 px-1">
+      <div className="flex items-center justify-between mb-4 px-1">
+        <h2 className="text-xl font-bold text-text-dark dark:text-white font-scheherazade flex items-center gap-2">
+          <span className="text-2xl">📊</span> إحصائياتك
+        </h2>
+        <span className="text-[10px] text-text-dark dark:text-gray-400 font-tajawal font-bold uppercase tracking-widest italic">Ramadan 1447</span>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
         {statCards.map((card, index) => (
           <div
             key={index}
-            className="bg-white/95 border border-black/5 rounded-2xl py-3.5 px-2 flex flex-col items-center justify-center text-center shadow-[0_8px_32px_rgba(0,0,0,0.05)] hover:scale-105 transition-transform"
+            className="bg-surface/40 dark:bg-white/5 backdrop-blur-md border border-black/5 dark:border-white/5 rounded-3xl py-5 flex flex-col items-center justify-center text-center shadow-lg hover:scale-105 transition-all duration-300 group"
           >
-            <span className="text-[20px] mb-1">{card.icon}</span>
-            <span className="text-[20px] font-extrabold text-text-dark">{card.value}</span>
-            <span className="text-[10px] text-text-mid mt-0.5">{card.label}</span>
+            <div className="w-12 h-12 rounded-2xl bg-gold/5 dark:bg-gold/10 flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition-transform duration-500 flex-shrink-0">
+              {card.icon}
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="text-2xl font-black text-text-dark tabular-nums leading-none">
+                {card.value}
+              </span>
+              <span className="text-[10px] text-text-dark font-bold mt-2 whitespace-nowrap">
+                {card.label}
+              </span>
+            </div>
           </div>
         ))}
       </div>

@@ -10,6 +10,7 @@ const FeatureGrid = ({ onFeatureClick }) => {
     { id: 'tafsir', label: 'تفسير الجلالين', icon: '📝' },
     { id: 'adhkar', label: 'الأذكار والتسبيح', icon: '📿' },
     { id: 'qadr', label: 'العشر الأواخر', icon: '⭐' },
+    { id: 'last10', label: 'خطة العشر الأواخر', icon: '🌙', highlight: true },
 
     // --- Development & Goals ---
     { id: 'goals', label: 'أهدافي الإيمانية', icon: '🎯' },
@@ -26,6 +27,7 @@ const FeatureGrid = ({ onFeatureClick }) => {
     { id: 'duacards', label: 'مكتبة البطاقات', icon: '🖼️' },
     { id: 'mosque', label: 'المساجد القريبة', icon: '🕋', highlight: true },
     { id: 'ai', label: 'المساعد الذكي', icon: '🤖' },
+    { id: 'salah_settings', label: 'إعدادات الصلاة', icon: '⚙️', highlight: true },
 
     // --- App Info ---
     { id: 'about', label: 'عن الأثر', icon: 'ℹ️' },
@@ -37,7 +39,7 @@ const FeatureGrid = ({ onFeatureClick }) => {
         <div className="inline-flex items-center justify-center p-3 bg-gold/10 rounded-full mb-4 ring-1 ring-gold/20">
           <span className="text-2xl">✨</span>
         </div>
-        <h2 className="text-3xl font-bold text-green-main font-scheherazade mb-2">
+        <h2 className="text-3xl font-bold text-text-dark font-scheherazade mb-2">
           المزيد من الأثر
         </h2>
         <p className="text-text-mid text-sm font-amiri">أدوات إيمانية تعينك على الطاعة</p>
@@ -48,17 +50,17 @@ const FeatureGrid = ({ onFeatureClick }) => {
           <button
             key={feature.id}
             onClick={() => onFeatureClick(feature.id)}
-            className={`relative overflow-hidden bg-white border ${feature.highlight ? 'border-gold shadow-[0_8px_30px_rgba(212,175,55,0.15)] ring-1 ring-gold' : 'border-black/5 shadow-sm'} rounded-3xl p-5 flex flex-col items-center justify-center gap-3 hover:-translate-y-1 hover:shadow-md transition-all duration-300 active:scale-95 group`}
+            className={`relative overflow-hidden bg-surface/90 border ${feature.highlight ? 'border-gold shadow-[0_8px_30px_rgba(212,175,55,0.15)] ring-1 ring-gold/50' : 'border-black/5 shadow-sm'} rounded-3xl p-5 flex flex-col items-center justify-center gap-3 hover:-translate-y-1 hover:shadow-md transition-all duration-300 active:scale-95 group`}
           >
             {feature.highlight && (
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-gold-light via-gold to-gold-dark"></div>
             )}
 
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-300 ${feature.highlight ? 'bg-gold/10 shadow-inner' : 'bg-black/5 group-hover:bg-gold/5 group-hover:text-gold'}`}>
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl group-hover:scale-110 transition-transform duration-300 ${feature.highlight ? 'bg-gold/10 shadow-inner' : 'bg-black/5 dark:bg-white/5 group-hover:bg-gold/5'}`}>
               {feature.icon}
             </div>
 
-            <span className={`font-bold font-tajawal text-xs text-center leading-tight ${feature.highlight ? 'text-gold-dark' : 'text-text-dark group-hover:text-gold-dark transition-colors'}`}>
+            <span className={`font-bold font-tajawal text-xs text-center leading-tight transition-colors duration-300 ${feature.highlight ? 'text-gold-dark' : 'text-text-dark dark:text-gray-100 group-hover:text-gold-dark'}`}>
               {feature.label}
             </span>
           </button>

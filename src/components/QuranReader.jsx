@@ -120,8 +120,8 @@ const QuranReader = () => {
     setTafsir(null);
 
     const data = await QURAN_SERVICE.getTafsir(ayah.surah.number, ayah.numberInSurah);
-    if (data && data.data) {
-      setTafsir(data.data.text);
+    if (data && data.text) {
+      setTafsir(data.text);
     } else {
       setTafsir("تعذر تحميل التفسير. يرجى التأكد من الاتصال بالإنترنت.");
     }
@@ -220,41 +220,64 @@ const QuranReader = () => {
   if (activeSurah || activeJuz) {
     return (
       <div className="space-y-6 animate-in fade-in duration-500 pb-24 h-full flex flex-col">
-        {/* Sticky Header */}
-        <div className="flex flex-col gap-4 p-4 bg-white/90 backdrop-blur-xl border-b border-black/5 sticky top-0 z-50 shadow-sm rounded-b-3xl -mx-4 px-8 mb-4">
-          <div className="flex justify-between items-center">
-            <button onClick={() => { setActiveSurah(null); setActiveJuz(null); if (audioRef.current) audioRef.current.pause(); setIsPlaying(false); }} className="text-gold text-lg">✕</button>
-            <h2 className="text-xl font-bold text-gold font-scheherazade">
+      {/* Sticky Header */}
+      <div className="flex flex-col gap-4 p-4 bg-white/95 dark:bg-[#1a1c23]/95 backdrop-blur-xl border-b border-black/5 dark:border-white/5 sticky top-0 z-50 shadow-sm rounded-b-[2.5rem] -mx-4 px-8 mb-4">
+        <div className="flex justify-between items-center">
+          <button 
+            onClick={() => { setActiveSurah(null); setActiveJuz(null); if (audioRef.current) audioRef.current.pause(); setIsPlaying(false); }} 
+            className="w-10 h-10 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-full text-gold transition-transform active:scale-90"
+          >
+            ✕
+          </button>
+          
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gold font-scheherazade leading-tight">
               {activeSurah ? surahs.find(s => s.number === activeSurah)?.name : `الجزء ${activeJuz?.toLocaleString('ar-SA') || activeJuz}`}
             </h2>
-            <div className="flex gap-2">
-              <button onClick={showKhatmDua} title="دعاء الختم" className="p-2 bg-gold/10 rounded-lg text-gold text-sm shadow-inner cursor-pointer active:scale-90 transition-transform">🤲</button>
-              <button onClick={saveBookmark} title="حفظ علامة" className="p-2 bg-black/5 rounded-lg text-gold-dark text-sm hover:bg-gold/10 transition-colors">🔖</button>
-              <button onClick={() => setFontSize(s => Math.min(s + 2, 40))} className="p-2 w-8 h-8 flex justify-center items-center bg-black/5 rounded-lg text-text-dark font-bold hover:bg-black/10 transition-colors">+</button>
-              <button onClick={() => setFontSize(s => Math.max(s - 2, 12))} className="p-2 w-8 h-8 flex justify-center items-center bg-black/5 rounded-lg text-text-dark font-bold hover:bg-black/10 transition-colors">-</button>
-            </div>
+            {activeSurah && (
+              <p className="text-[10px] text-text-mid font-amiri opacity-70">
+                {surahs.find(s => s.number === activeSurah)?.numberOfAyahs.toLocaleString('ar-SA')} آية
+              </p>
+            )}
           </div>
 
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2">
+            <button onClick={showKhatmDua} title="دعاء الختم" className="w-10 h-10 flex items-center justify-center bg-gold/10 rounded-full text-gold text-lg shadow-inner cursor-pointer active:scale-90 transition-transform">🤲</button>
+            <button onClick={saveBookmark} title="حفظ علامة" className="w-10 h-10 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-full text-gold-dark text-lg hover:bg-gold/10 transition-colors">🔖</button>
+          </div>
+        </div>
+
+        <div className="flex gap-3 items-center">
+          <div className="flex-1 relative">
             <select
               value={reciter}
               onChange={(e) => { setReciter(e.target.value); if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; setIsPlaying(false); } }}
-              className="flex-1 bg-black/5 border border-black/10 rounded-xl p-2.5 text-xs text-text-dark outline-none cursor-pointer focus:ring-2 focus:ring-gold/50 font-tajawal"
+              className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl p-3 pr-4 text-xs text-text-dark dark:text-white outline-none cursor-pointer focus:ring-2 focus:ring-gold/30 font-tajawal appearance-none"
             >
-              <option value="ar.alafasy">مشاري العفاسي</option>
-              <option value="ar.abdurrahmanoossudais">عبدالرحمن السديس</option>
-              <option value="ar.minshawi">محمد صديق المنشاوي</option>
+              <option value="ar.alafasy">القارئ: مشاري العفاسي</option>
+              <option value="ar.abdurrahmanoossudais">القارئ: عبدالرحمن السديس</option>
+              <option value="ar.minshawi">القارئ: محمد صديق المنشاوي</option>
             </select>
-            {activeSurah && (
-              <button
-                onClick={toggleAudio}
-                className="bg-gradient-to-l from-gold to-gold-light border border-gold/30 rounded-xl px-5 py-2.5 text-xs text-green-main font-bold shadow-md active:scale-95 transition-all"
-              >
-                {isPlaying ? '⏸ إيقاف' : '▶ استماع'}
-              </button>
-            )}
+            <div className="absolute left-3 inset-y-0 flex items-center pointer-events-none text-gold/50">
+              ▼
+            </div>
           </div>
+
+          <div className="flex gap-2">
+            <button onClick={() => setFontSize(s => Math.min(s + 2, 40))} className="w-9 h-9 flex justify-center items-center bg-black/5 dark:bg-white/5 rounded-xl text-text-dark dark:text-white font-bold hover:bg-gold/10 transition-colors">+</button>
+            <button onClick={() => setFontSize(s => Math.max(s - 2, 12))} className="w-9 h-9 flex justify-center items-center bg-black/5 dark:bg-white/5 rounded-xl text-text-dark dark:text-white font-bold hover:bg-gold/10 transition-colors">-</button>
+          </div>
+
+          {activeSurah && (
+            <button
+              onClick={toggleAudio}
+              className={`flex items-center gap-2 rounded-2xl px-6 py-3 text-xs font-bold shadow-lg active:scale-95 transition-all ${isPlaying ? 'bg-red-500 text-white' : 'bg-gradient-to-l from-gold to-gold-light text-green-main'}`}
+            >
+              {isPlaying ? '⏸ إيقاف' : '▶ استماع'}
+            </button>
+          )}
         </div>
+      </div>
 
         {loading ? (
           <div className="flex-1 flex flex-col items-center justify-center py-20 animate-pulse">

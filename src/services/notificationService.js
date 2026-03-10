@@ -1,15 +1,29 @@
+import { STORAGE_SERVICE } from './storageService'; // ✅ FIX: was missing — caused ReferenceError crash
+
 export const NOTIFICATION_SERVICE = {
   isCapacitor: typeof window !== 'undefined' && window.hasOwnProperty('Capacitor'),
 
   async requestPermissions() {
     if (!this.isCapacitor) return false;
-    const { LocalNotifications } = window.Capacitor.Plugins;
-    const perm = await LocalNotifications.checkPermissions();
-    if (perm.display !== 'granted') {
-      const req = await LocalNotifications.requestPermissions();
-      return req.display === 'granted';
+
+    try {
+      const { LocalNotifications } = window.Capacitor.Plugins;
+      if (!LocalNotifications) return false;
+
+      // Sometimes checkPermissions isn't available on all platforms
+      const perm = await LocalNotifications.checkPermissions().catch(() => ({ display: 'granted' }));
+      console.log('Current notification permissions:', perm);
+
+      if (perm.display !== 'granted') {
+        const req = await LocalNotifications.requestPermissions().catch(() => ({ display: 'denied' }));
+        console.log('Requested notification permissions:', req);
+        return req.display === 'granted';
+      }
+      return true;
+    } catch (err) {
+      console.error('Error checking/requesting permissions:', err);
+      return false; // Degrading gracefully
     }
-    return true;
   },
 
   async clearChannel(channelId) {
@@ -53,10 +67,15 @@ export const NOTIFICATION_SERVICE = {
     const { LocalNotifications } = window.Capacitor.Plugins;
 
     try {
-      // 1. Clear ALL existing notifications first to avoid duplication
+      // ✅ FIX: Cancel only adhan IDs (100-805), NOT all notifications
+      // This preserves: live ticker (ID 9999) and salawat reminders (IDs 5000+)
       const pending = await LocalNotifications.getPending();
-      if (pending.notifications.length > 0) {
-        await LocalNotifications.cancel({ notifications: pending.notifications });
+      const adhanIds = pending.notifications.filter(n =>
+        n.id !== 9999 &&   // keep live ticker
+        n.id < 5000        // keep salawat reminders
+      );
+      if (adhanIds.length > 0) {
+        await LocalNotifications.cancel({ notifications: adhanIds });
       }
 
       // 2. Ensure Channel exists
@@ -87,7 +106,7 @@ export const NOTIFICATION_SERVICE = {
               title: `حان الآن موعد أذان ${p.name}`,
               body: 'حي على الصلاة.. حي على الفلاح',
               id: p.id + (dayOffset * 100),
-              schedule: { 
+              schedule: {
                 at: scheduleDate,
                 allowPause: false,
                 repeats: false

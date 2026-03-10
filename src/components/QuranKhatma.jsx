@@ -59,7 +59,7 @@ const QuranKhatma = () => {
         </div>
       </div>
 
-      <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-black/5 dark:border-white/10 rounded-[2.5rem] p-6 shadow-sm">
+      <div className="bg-surface/80 dark:bg-white/5 backdrop-blur-xl border border-black/5 dark:border-white/10 rounded-[2.5rem] p-6 shadow-sm">
         <p className="text-center text-lg font-amiri text-green-main dark:text-gold-light italic">
           "{getMilestone()}"
         </p>
@@ -78,7 +78,7 @@ const QuranKhatma = () => {
               onClick={() => toggleJuz(i)}
               className={`aspect-square rounded-2xl flex flex-col items-center justify-center transition-all duration-500 transform active:scale-90 border-2 ${status === 1
                   ? 'bg-gold border-gold text-green-main shadow-lg shadow-gold/20 scale-105'
-                  : 'bg-white dark:bg-white/5 border-black/5 dark:border-white/10 text-text-mid dark:text-white/40 hover:border-gold/30'
+                  : 'bg-surface dark:bg-white/5 border-black/5 dark:border-white/10 text-text-mid dark:text-white/40 hover:border-gold/30'
                 }`}
             >
               <span className={`text-xl font-bold font-scheherazade transition-all ${status === 1 ? 'scale-125' : ''}`}>

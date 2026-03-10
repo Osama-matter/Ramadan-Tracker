@@ -37,40 +37,16 @@ export const QURAN_SERVICE = {
   // Fetch Tafsir for an ayah using Quran.com API v4
   async getTafsir(surahNumber, ayahNumber) {
     const ayahKey = `${surahNumber}:${ayahNumber}`;
-    // Force specific Arabic Tafsir IDs:
-    // 16: Al-Jalalayn (Arabic) - Very reliable Arabic
-    // 169: Ibn Kathir (Arabic)
+    // 16: Al-Jalalayn (Arabic)
     const tafsirId = 16;
     const tafsirUrl = `https://api.quran.com/api/v4/tafsirs/${tafsirId}/by_ayah/${ayahKey}`;
-    const arabicUrl = `https://api.quran.com/api/v4/quran/verses/uthmani?verse_key=${ayahKey}`;
 
     try {
-      // 1. Get Arabic Verse Text
-      let arabicText = "";
-      const arabicResponse = await fetch(arabicUrl);
-      if (arabicResponse.ok) {
-        const data = await arabicResponse.json();
-        if (data.verses && data.verses[0]) {
-          arabicText = data.verses[0].text_uthmani;
-        }
-      }
-
-      // 2. Get Tafsir Text (Forcing Arabic via specific ID and headers)
-      let tafsirText = "";
-      const tafsirResponse = await fetch(tafsirUrl, {
-        headers: {
-          'Accept': 'application/json',
-          'Accept-Language': 'ar-SA,ar;q=0.9'
-        }
-      });
-
+      const tafsirResponse = await fetch(tafsirUrl);
       if (tafsirResponse.ok) {
         const data = await tafsirResponse.json();
         if (data.tafsir && data.tafsir.text) {
-          tafsirText = data.tafsir.text;
-
-          // Clean HTML tags and entities
-          tafsirText = tafsirText
+          let tafsirText = data.tafsir.text
             .replace(/<[^>]*>/g, '')
             .replace(/&nbsp;/g, ' ')
             .replace(/&quot;/g, '"')
@@ -78,24 +54,14 @@ export const QURAN_SERVICE = {
             .replace(/&amp;/g, '&')
             .replace(/\s+/g, ' ')
             .trim();
-
-          // Final check: if it still looks like English, it's a failure
-          if (/[a-zA-Z]{20,}/.test(tafsirText.substring(0, 200))) {
-            tafsirText = "عذراً، التفسير العربي غير متوفر حالياً لهذه الآية. حاول اختيار آية أخرى.";
-          }
+          
+          return { text: tafsirText };
         }
       }
-
-      return {
-        arabic: arabicText || "تعذر تحميل النص",
-        tafsir: tafsirText || "تعذر تحميل التفسير العربي"
-      };
+      return { text: "تعذر تحميل التفسير حالياً." };
     } catch (e) {
-      console.error("Quran.com API Error:", e);
-      return {
-        arabic: "تعذر الاتصال",
-        tafsir: "تأكد من اتصالك بالإنترنت لجلب التفسير."
-      };
+      console.error("Tafsir fetch error:", e);
+      return { text: "تأكد من اتصالك بالإنترنت." };
     }
   },
 

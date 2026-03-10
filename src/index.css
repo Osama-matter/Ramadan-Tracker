@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=Amiri:wght@400;700&display=swap');
+
 @import '@fontsource/tajawal/300.css';
 @import '@fontsource/tajawal/400.css';
 @import '@fontsource/tajawal/500.css';
@@ -8,42 +10,76 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ✅ إلغاء border افتراضي + ضبط لون النص */
+@layer base {
+
+  *,
+  ::before,
+  ::after {
+    border-color: transparent;
+  }
+
+  /* Light mode — نص غامق على خلفية فاتحة */
+  body {
+    color: rgb(var(--text-dark));
+    background-color: rgb(var(--cream));
+  }
+
+  /* ضمان وضوح النص في كل الحالات */
+  p,
+  span,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  label,
+  button {
+    color: inherit;
+  }
+}
+
+/* ══ CSS Variables ═══════════════════════════════════════════════ */
 :root {
   --gold: 201 168 76;
   --gold-light: 232 201 122;
   --gold-dark: 160 120 48;
+  --gold-trace: 201 168 76;
   --green-main: 27 67 50;
   --green-mid: 45 106 79;
   --green-light: 82 183 136;
+
+  /* Light mode — خلفية فاتحة، نص غامق */
   --cream: 248 244 236;
+  --surface: 255 255 255;
   --text-dark: 26 26 46;
+  /* نص رئيسي غامق جداً */
   --text-mid: 74 85 104;
+  /* نص ثانوي */
+
   --white: 255 255 255;
   --black: 0 0 0;
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
 }
 
+/* Dark mode — خلفية غامقة، نص فاتح */
 .dark {
   --cream: 3 5 15;
-  /* Very dark blue/black background */
-  --white: 15 22 41;
-  /* Dark surface for cards */
-  --black: 255 255 255;
-  /* Invert black utility to white in dark mode */
+  --surface: 15 22 41;
   --text-dark: 248 244 236;
-  /* Light cream text */
+  /* نص رئيسي فاتح */
   --text-mid: 156 163 175;
-  /* Gray text */
+  /* نص ثانوي */
 }
 
+/* ══ Base Styles ══════════════════════════════════════════════════ */
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background-color: rgb(var(--cream));
-  color: rgb(var(--text-dark));
   font-family: 'Tajawal', sans-serif;
   margin: 0;
   padding: 0;
@@ -51,6 +87,7 @@ body {
   overflow-x: hidden;
 }
 
+/* ══ Typography ══════════════════════════════════════════════════ */
 .font-scheherazade {
   font-family: 'Scheherazade New', serif;
 }
@@ -59,7 +96,22 @@ body {
   font-family: 'Amiri', serif;
 }
 
-/* Custom Scrollbar */
+/* ══ Component Helpers ═══════════════════════════════════════════ */
+
+/* بطاقة قياسية — نص واضح في الوضعين */
+.card-base {
+  background-color: rgb(var(--surface));
+  color: rgb(var(--text-dark));
+  border-radius: 1rem;
+  box-shadow: var(--shadow);
+}
+
+/* نص ثانوي */
+.text-secondary {
+  color: rgb(var(--text-mid));
+}
+
+/* ══ Scrollbars ══════════════════════════════════════════════════ */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
 }
@@ -69,11 +121,20 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--gold-trace);
+  background: rgba(201, 168, 76, 0.3);
   border-radius: 10px;
 }
 
-/* Animations */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ══ Animations ══════════════════════════════════════════════════ */
 @keyframes starPulse {
 
   0%,
@@ -92,6 +153,7 @@ body {
   animation: starPulse 3s infinite ease-in-out;
 }
 
+/* ══ Safe Area ═══════════════════════════════════════════════════ */
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom);
 }

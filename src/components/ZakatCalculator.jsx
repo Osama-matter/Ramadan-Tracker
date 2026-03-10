@@ -38,7 +38,7 @@ const ZakatCalculator = () => {
               value={goldPrice}
               onChange={(e) => setGoldPrice(e.target.value)}
               placeholder="ادخل السعر بالعملة المحلية"
-              className="w-full bg-white border border-black/5 rounded-xl px-4 py-3 text-lg font-bold text-text-dark outline-none focus:border-gold/50 transition-all text-center placeholder:text-text-mid/50"
+              className="w-full bg-surface border border-black/5 rounded-xl px-4 py-3 text-lg font-bold text-text-dark outline-none focus:border-gold/50 transition-all text-center placeholder:text-text-mid/50"
             />
           </div>
 
@@ -49,7 +49,7 @@ const ZakatCalculator = () => {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.00"
-              className="w-full bg-white border border-black/5 rounded-xl px-4 py-3 text-lg font-bold text-text-dark outline-none focus:border-gold/50 transition-all text-center placeholder:text-text-mid/50"
+              className="w-full bg-surface border border-black/5 rounded-xl px-4 py-3 text-lg font-bold text-text-dark outline-none focus:border-gold/50 transition-all text-center placeholder:text-text-mid/50"
             />
           </div>
         </div>

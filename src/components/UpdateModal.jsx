@@ -30,10 +30,13 @@ const UpdateModal = () => {
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setIsOpen(false)} />
+            <div className="relative w-full max-w-lg bg-surface dark:bg-[#1a1c23] rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-300 text-right overflow-hidden flex flex-col max-h-[90vh]">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full -mr-16 -mt-16" />
 
-            {/* Modal */}
-            <div className="relative bg-cream dark:bg-card-bg-dark rounded-3xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-500">
+                <div className="flex justify-between items-center mb-8 relative z-10 border-b border-black/5 dark:border-white/5 pb-4">
+                    <button onClick={() => setIsOpen(false)} className="w-10 h-10 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full text-gold-dark text-xl hover:bg-black/10 transition-colors">✕</button>
+                </div>
 
                 {/* Header Image Area */}
                 <div className="h-40 bg-gradient-to-br from-green-main to-[#3d8b68] relative flex items-center justify-center">

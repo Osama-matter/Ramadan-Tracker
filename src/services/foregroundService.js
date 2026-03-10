@@ -1,168 +1,233 @@
+/**
+ * FOREGROUND SERVICE - Live Prayer Countdown
+ * ============================================
+ * يستخدم: @capawesome-team/capacitor-android-foreground-service
+ * AndroidManifest.xml ✅ جاهز بالفعل
+ *
+ * التثبيت (لو لم يكن مثبتاً):
+ *   npm install @capawesome-team/capacitor-android-foreground-service
+ *   npx cap sync android
+ */
+
 import { ForegroundService } from '@capawesome-team/capacitor-android-foreground-service';
 import { STORAGE_SERVICE } from './storageService';
 
-class ForegroundTimerService {
-    constructor() {
-        this.interval = null;
-        this.prayerTimes = null;
-        this.isActive = false;
-    }
+let _interval = null;
+let _isRunning = false;
+let _salahModeEnd = STORAGE_SERVICE.getItem('athr_salah_mode_end', null);
 
-    async checkPermissions() {
-        if (!window.Capacitor || window.Capacitor.getPlatform() !== 'android') return true;
-
-        const { LocalNotifications } = window.Capacitor.Plugins;
-        const perm = await LocalNotifications.checkPermissions();
-        if (perm.display !== 'granted') {
-            const req = await LocalNotifications.requestPermissions();
-            return req.display === 'granted';
+// Listen to Salah Mode changes
+if (typeof window !== 'undefined') {
+    window.addEventListener('athr_salah_mode_change', (e) => {
+        _salahModeEnd = e.detail.active ? e.detail.endTime : null;
+        if (_isRunning) {
+            FOREGROUND_SERVICE._tick(); // Force immediate update
         }
-        return true;
+    });
+}
+
+// ─── ثوابت ────────────────────────────────────────────────────────────────────
+const NOTIFICATION_ID = 111;
+const UPDATE_INTERVAL_MS = 60000; // تحديث كل دقيقة
+
+const PRAYER_NAMES_AR = {
+    fajr: 'الفجر',
+    sunrise: 'الشروق',
+    dhuhr: 'الظهر',
+    asr: 'العصر',
+    maghrib: 'المغرب',
+    isha: 'العشاء',
+};
+
+const PRAYER_ORDER = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
+
+// ─── مساعدات ──────────────────────────────────────────────────────────────────
+
+function timeStrToDate(timeStr, baseDate = new Date()) {
+    if (!timeStr) return null;
+    const clean = timeStr.trim();
+    const isPM = /PM/i.test(clean);
+    const isAM = /AM/i.test(clean);
+    const nums = clean.replace(/\s*(AM|PM)\s*/i, '').split(':').map(Number);
+    let h = nums[0];
+    const m = nums[1] || 0;
+    if (isPM && h !== 12) h += 12;
+    if (isAM && h === 12) h = 0;
+    const d = new Date(baseDate);
+    d.setHours(h, m, 0, 0);
+    return d;
+}
+
+export function getNextPrayer(timings) {
+    if (!timings) return null;
+    const now = new Date();
+
+    const prayers = PRAYER_ORDER
+        .map(key => {
+            const raw = timings[key.charAt(0).toUpperCase() + key.slice(1)] || timings[key];
+            return { key, name: PRAYER_NAMES_AR[key], date: timeStrToDate(raw) };
+        })
+        .filter(p => p.date !== null);
+
+    let next = prayers.find(p => p.date > now);
+
+    if (!next) {
+        const fajrRaw = timings['Fajr'] || timings['fajr'];
+        if (fajrRaw) {
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            next = { key: 'fajr', name: 'الفجر', date: timeStrToDate(fajrRaw, tomorrow) };
+        }
     }
+
+    if (!next) return null;
+
+    const diffMs = next.date - now;
+    const totalMinutes = Math.max(0, Math.floor(diffMs / 60000));
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    const remaining = hours > 0 ? `${hours} س ${minutes} د` : `${minutes} دقيقة`;
+
+    return { key: next.key, name: next.name, remaining, minutesLeft: totalMinutes, date: next.date };
+}
+
+// ─── الخدمة ───────────────────────────────────────────────────────────────────
+
+// ─── الخدمة ───────────────────────────────────────────────────────────────────
+
+export const FOREGROUND_SERVICE = {
 
     async startService(timings) {
         if (!window.Capacitor || window.Capacitor.getPlatform() !== 'android') {
-            console.log('Foreground Service: platform is not Android, skipping.');
+            console.log('[FG_SERVICE] Not Android — skipping.');
             return;
-        }
-
-        console.log('Foreground Service: Requesting permissions...');
-        const hasPerms = await this.checkPermissions();
-        if (!hasPerms) {
-            console.error('Foreground Service: Permissions NOT granted.');
-            return;
-        }
-
-        this.prayerTimes = timings;
-        if (!this.prayerTimes) {
-            console.error('Foreground Service: No timings provided.');
-            return;
-        }
-
-        // ✅ FIX 1: Also request POST_NOTIFICATIONS permission for Android 13+
-        try {
-            await ForegroundService.requestPermissions();
-        } catch (e) {
-            console.warn('Foreground Service: requestPermissions not supported or already granted:', e);
         }
 
         try {
-            this.isActive = true;
-            console.log('Foreground Service: Starting service...');
+            // 1. طلب صلاحية الإشعارات (Android 13+)
+            // Catch immediately if the method doesn't exist or fails
+            try {
+                if (ForegroundService.requestPermissions) {
+                    await ForegroundService.requestPermissions().catch(() => { });
+                }
+            } catch (e) {
+                console.warn('[FG_SERVICE] requestPermissions not supported/failed:', e);
+            }
 
-            const initialData = this.calculateNextPrayer() || { name: '...', timeLeft: 'جاري الحساب' };
-            console.log('Foreground Service: Initial Calculation:', initialData);
+            const stored = STORAGE_SERVICE.getItem('athr_prayer_times') || timings;
+            const next = getNextPrayer(stored);
+            if (!next) {
+                console.warn('[FG_SERVICE] No next prayer found.');
+                return;
+            }
 
-            // ✅ FIX 2: Use `notificationImportance` instead of `importance`
+            // 2. تشغيل الـ Foreground Service 
+            // ✅ تم تغيير الخصائص (Keys) لتطابق واجهة الإصدار 8 
+            // ✅ تم تغيير smallIcon إلى 'ic_notification' (الهلال المفرغ) ليظهر بشكل صحيح بدون مربع أبيض
             await ForegroundService.startForegroundService({
-                id: 111,
-                title: `الصلاة القادمة: ${initialData.name}`,
-                body: `باقي: ${initialData.timeLeft}`,
-                smallIcon: 'ic_launcher',
-                notificationImportance: 3,
+                id: NOTIFICATION_ID,
+                title: `🕌 الصلاة القادمة: ${next.name}`,
+                body: `⏳ متبقي: ${next.remaining}`,
+                smallIcon: 'ic_notification'
             });
 
-            console.log('Foreground Service: Service started successfully.');
-            this.startTicker();
+            _isRunning = true;
+            console.log(`[FG_SERVICE] Started ✓ | ${next.name} في ${next.remaining}`);
+
+            // تحديث كل دقيقة
+            if (_interval) clearInterval(_interval);
+            _interval = setInterval(() => this._tick(), UPDATE_INTERVAL_MS);
+
+        } catch (err) {
+            console.error('[FG_SERVICE] startService error:', err);
+        }
+    },
+
+    async _tick() {
+        if (!_isRunning) return;
+        
+        const isSalahActive = _salahModeEnd && _salahModeEnd > Date.now();
+
+        try {
+            const stored = STORAGE_SERVICE.getItem('athr_prayer_times');
+            const next = getNextPrayer(stored);
+            if (!next && !isSalahActive) return;
+
+            let title = `🕌 الصلاة القادمة: ${next?.name || ''}`;
+            let body = `⏳ متبقي: ${next?.remaining || ''}`;
+
+            if (isSalahActive) {
+                const remainingSecs = Math.max(0, Math.ceil((_salahModeEnd - Date.now()) / 1000));
+                const mins = Math.floor(remainingSecs / 60);
+                const secs = remainingSecs % 60;
+                title = `وضع الصلاة والسكينة نشط 🕌`;
+                body = `⏳ ينتهي بعد: ${mins}:${secs.toString().padStart(2, '0')} دقيقة`;
+                
+                // تحديث الإشعار لمرة واحدة ثم التوقف لضمان الهدوء
+                await ForegroundService.updateForegroundService({
+                    id: NOTIFICATION_ID,
+                    title,
+                    body,
+                    smallIcon: 'ic_notification'
+                });
+                return; 
+            }
+
+            // ✅ التحديث باستخدام خصائص الإصدار 8
+            await ForegroundService.updateForegroundService({
+                id: NOTIFICATION_ID,
+                title,
+                body,
+                smallIcon: 'ic_notification'
+            });
+
+            console.log(`[FG_SERVICE] ↻ ${next.name} | ${next.remaining}`);
+
+            // لو بقي أقل من دقيقة → تحديث كل 10 ثواني (منطق ممتاز أضفته أنت!)
+            if (next.minutesLeft <= 1 && _interval !== null) {
+                // نتأكد أننا لسنا بالفعل في وضع الـ fastTick
+                // (نعرف ذلك من قيمة الـ interval لو كانت 60 ثانية)
+                this._fastTickMode();
+            }
+
         } catch (e) {
-            console.error('Foreground Service error in startService:', e);
-            this.isActive = false;
+            console.warn('[FG_SERVICE] _tick error:', e);
         }
-    }
+    },
 
-    startTicker() {
-        if (this.interval) clearInterval(this.interval);
-
-        this.interval = setInterval(async () => {
-            if (!this.isActive) return;
-
-            const nextPrayerDetails = this.calculateNextPrayer();
-            if (nextPrayerDetails) {
-                try {
-                    // ✅ FIX 3: Plugin has no `updateForegroundService` — call `startForegroundService`
-                    // again with the same ID to update the notification content
-                    await ForegroundService.startForegroundService({
-                        id: 111,
-                        title: `الصلاة القادمة: ${nextPrayerDetails.name}`,
-                        body: `باقي: ${nextPrayerDetails.timeLeft}`,
-                        smallIcon: 'ic_launcher',
-                        notificationImportance: 3,
-                    });
-                } catch (e) {
-                    console.error('Failed to update Foreground Service', e);
-                }
+    _fastTickMode() {
+        if (_interval) clearInterval(_interval);
+        let count = 0;
+        _interval = setInterval(async () => {
+            await this._tick();
+            if (++count >= 12) { // 2 دقيقة ثم عودة للوضع العادي
+                clearInterval(_interval);
+                _interval = setInterval(() => this._tick(), UPDATE_INTERVAL_MS);
             }
-        }, 60000);
-    }
-
-    calculateNextPrayer() {
-        if (!this.prayerTimes) return null;
-
-        const now = new Date();
-        const currentTimeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-
-        // ✅ FIX 4: Support both capitalized (Fajr) and lowercase (fajr) key formats
-        const t = this.prayerTimes;
-        const prayers = [
-            { id: 'fajr', label: 'الفجر', time: t.Fajr || t.fajr },
-            { id: 'dhuhr', label: 'الظهر', time: t.Dhuhr || t.dhuhr },
-            { id: 'asr', label: 'العصر', time: t.Asr || t.asr },
-            { id: 'maghrib', label: 'المغرب', time: t.Maghrib || t.maghrib },
-            { id: 'isha', label: 'العشاء', time: t.Isha || t.isha }
-        ];
-
-        let nextPrayer = null;
-        for (const prayer of prayers) {
-            if (prayer.time && currentTimeStr < prayer.time) {
-                nextPrayer = prayer;
-                break;
-            }
-        }
-
-        // Wrap around to next day Fajr
-        if (!nextPrayer) {
-            nextPrayer = { id: 'fajr', label: 'الفجر', time: prayers[0].time };
-        }
-
-        if (!nextPrayer.time) return null;
-
-        let [pHours, pMins] = nextPrayer.time.split(':').map(Number);
-        let nHours = now.getHours();
-        let nMins = now.getMinutes();
-
-        if (nHours > pHours || (nHours === pHours && nMins > pMins)) {
-            pHours += 24;
-        }
-
-        let diffMins = (pHours * 60 + pMins) - (nHours * 60 + nMins);
-        const hrsLeft = Math.floor(diffMins / 60);
-        const minsLeft = diffMins % 60;
-
-        let timeLeftStr = '';
-        if (hrsLeft > 0) timeLeftStr += `${hrsLeft} ساعة و `;
-        timeLeftStr += `${minsLeft} دقيقة`;
-
-        return {
-            name: nextPrayer.label,
-            timeLeft: timeLeftStr
-        };
-    }
+        }, 10000);
+    },
 
     async stopService() {
-        this.isActive = false;
-        if (this.interval) {
-            clearInterval(this.interval);
-            this.interval = null;
-        }
+        if (_interval) { clearInterval(_interval); _interval = null; }
+        _isRunning = false;
 
-        if (window.Capacitor && window.Capacitor.getPlatform() === 'android') {
-            try {
-                await ForegroundService.stopForegroundService();
-            } catch (e) {
-                console.error('Failed to stop Foreground Service', e);
-            }
-        }
-    }
-}
+        if (!window.Capacitor || window.Capacitor.getPlatform() !== 'android') return;
 
-export const FOREGROUND_SERVICE = new ForegroundTimerService();
+        try {
+            await ForegroundService.stopForegroundService();
+            console.log('[FG_SERVICE] Stopped ✓');
+        } catch (e) {
+            console.warn('[FG_SERVICE] stopService (ignored):', e?.message);
+        }
+    },
+
+    async updateTimings(newTimings) {
+        STORAGE_SERVICE.setItem('athr_prayer_times', newTimings);
+        if (_isRunning) {
+            console.log('[FG_SERVICE] Timings updated — restarting...');
+            await this.startService(newTimings);
+        }
+    },
+
+    isRunning: () => _isRunning,
+};

@@ -59,7 +59,7 @@ const MosqueFinder = () => {
         <p className="text-text-mid text-sm font-amiri text-balance">استخدم خرائط جوجل للعثور على أقرب المساجد بدقة عالية</p>
       </div>
 
-      <div className="bg-white/5 border border-black/10 rounded-[2.5rem] p-8 shadow-xl backdrop-blur-sm text-center space-y-6">
+      <div className="bg-surface/50 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-[2.5rem] p-8 shadow-xl backdrop-blur-sm text-center space-y-6">
         <div className="w-24 h-24 bg-gold/10 rounded-full flex items-center justify-center text-5xl mx-auto border border-gold/20 shadow-inner animate-bounce-subtle">
           🕌
         </div>

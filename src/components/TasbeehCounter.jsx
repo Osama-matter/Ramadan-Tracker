@@ -99,8 +99,8 @@ const TasbeehCounter = () => {
               setCount(0);
             }}
             className={`px-4 py-2 rounded-full whitespace-nowrap text-[10px] transition-all border font-bold ${currentDhikr === dhikr.text
-                ? 'bg-gold text-green-main border-gold'
-                : 'bg-black/5 text-text-dark border-black/10'
+              ? 'bg-gold text-green-main border-gold'
+              : 'bg-black/5 text-text-dark border-black/10'
               }`}
           >
             {dhikr.text}
@@ -110,7 +110,7 @@ const TasbeehCounter = () => {
 
       <button
         onClick={handleIncrement}
-        className="relative aspect-square max-w-[300px] mx-auto flex flex-col items-center justify-center bg-white rounded-full border border-black/5 shadow-[0_8px_32px_rgba(0,0,0,0.05)] group active:scale-95 transition-transform duration-75 w-full cursor-pointer overflow-hidden"
+        className="relative aspect-square max-w-[300px] mx-auto flex flex-col items-center justify-center bg-surface rounded-full border border-black/5 shadow-[0_8px_32px_rgba(0,0,0,0.05)] group active:scale-95 transition-transform duration-75 w-full cursor-pointer overflow-hidden"
         aria-label="تسبيح"
       >
         <div className="absolute inset-0 rounded-full border-[6px] border-gold/10 pointer-events-none"></div>

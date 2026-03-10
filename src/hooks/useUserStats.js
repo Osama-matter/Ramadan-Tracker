@@ -10,12 +10,20 @@ export const useUserStats = () => {
 
   useEffect(() => {
     STORAGE_SERVICE.migrateLegacyData();
-    const savedStats = STORAGE_SERVICE.getItem('athr_user_stats', {
-      streak: 0,
-      points: 0,
-      lastActive: null
-    });
-    setStats(savedStats);
+    const loadStats = () => {
+      const savedStats = STORAGE_SERVICE.getItem('athr_user_stats', {
+        streak: 0,
+        points: 0,
+        lastActive: null
+      });
+      setStats(savedStats);
+    };
+
+    loadStats();
+
+    // Listen for manual updates
+    window.addEventListener('athr_stats_updated', loadStats);
+    return () => window.removeEventListener('athr_stats_updated', loadStats);
   }, []);
 
   const updateStats = (newStats) => {

@@ -4,27 +4,49 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        'gold': 'rgb(var(--gold) / <alpha-value>)',
-        'gold-light': 'rgb(var(--gold-light) / <alpha-value>)',
-        'gold-dark': 'rgb(var(--gold-dark) / <alpha-value>)',
-        'green-main': 'rgb(var(--green-main) / <alpha-value>)',
-        'green-mid': 'rgb(var(--green-mid) / <alpha-value>)',
-        'green-light': 'rgb(var(--green-light) / <alpha-value>)',
-        'cream': 'rgb(var(--cream) / <alpha-value>)',
-        'text-dark': 'rgb(var(--text-dark) / <alpha-value>)',
-        'text-mid': 'rgb(var(--text-mid) / <alpha-value>)',
-        'white': 'rgb(var(--white) / <alpha-value>)',
-        'black': 'rgb(var(--black) / <alpha-value>)',
+        // ── الألوان الأساسية (تقرأ من CSS variables) ──────────────────
+        gold: {
+          DEFAULT: 'rgb(var(--gold))',
+          light: 'rgb(var(--gold-light))',
+          dark: 'rgb(var(--gold-dark))',
+        },
+        green: {
+          main: 'rgb(var(--green-main))',
+          mid: 'rgb(var(--green-mid))',
+          light: 'rgb(var(--green-light))',
+        },
+        cream: 'rgb(var(--cream))',
+        surface: 'rgb(var(--surface))',
+
+        // ── ألوان النص ──────────────────────────────────────────────────
+        // text-text-dark → النص الرئيسي (غامق في الفاتح، فاتح في المظلم)
+        // text-text-mid  → النص الثانوي
+        'text-dark': 'rgb(var(--text-dark))',
+        'text-mid': 'rgb(var(--text-mid))',
       },
+
       fontFamily: {
-        'tajawal': ['Tajawal', 'sans-serif'],
-        'amiri': ['Amiri', 'serif'],
-        'scheherazade': ['Scheherazade New', 'serif'],
-      }
+        tajawal: ['Tajawal', 'sans-serif'],
+        scheherazade: ['"Scheherazade New"', 'serif'],
+        amiri: ['Amiri', 'serif'],
+      },
+
+      borderColor: {
+        // ✅ الحل: border افتراضي شفاف — يمنع الخطوط البيضاء
+        DEFAULT: 'transparent',
+      },
+
+      boxShadow: {
+        card: '0 8px 32px rgba(0,0,0,0.08)',
+        gold: '0 4px 20px rgba(201,168,76,0.25)',
+      },
     },
   },
-  plugins: [],
-}
+  plugins: [
+    require('tailwindcss-animate'),
+  ],
+};

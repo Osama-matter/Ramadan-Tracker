@@ -30,7 +30,7 @@ const AVAILABLE_MODELS = [
 const AI_CHAT_HISTORY_KEY = 'athr_ai_chat_history_v1';
 const AI_MAX_HISTORY_TURNS = 10;
 const COOLDOWN_DURATION = 3000;
-const GEMINI_API_KEY = "AIzaSyBXjw5cglFdIT9NSg6PCTln7E7dZrVISb4";
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 const AIAssistant = () => {
   const [messages, setMessages] = useState([]);
@@ -150,6 +150,7 @@ const AIAssistant = () => {
 
       // Process potential Goal additions from AI
       const goalMatches = reply.match(/\[ADD_GOAL: (.*?): (.*?)\]/g);
+      
       if (goalMatches) {
         const currentGoals = STORAGE_SERVICE.getItem('athr_goals', []);
         let updatedGoals = [...currentGoals];
@@ -250,7 +251,7 @@ const AIAssistant = () => {
           >
             <div className={`max-w-[85%] p-4 rounded-3xl text-sm leading-relaxed shadow-md transition-all ${msg.sender === 'user'
               ? 'bg-green-main text-white font-bold rounded-tr-none'
-              : 'bg-white text-text-dark border border-black/5 rounded-tl-none font-amiri text-base shadow-sm'
+              : 'bg-surface text-text-dark border border-black/5 rounded-tl-none font-amiri text-base shadow-sm'
               }`}>
               {msg.sender === 'ai' && msg.isNew ? (
                 <Typewriter text={msg.text} delay={15} onUpdate={scrollToBottom} />
@@ -262,7 +263,7 @@ const AIAssistant = () => {
         ))}
         {isLoading && (
           <div className="flex justify-end">
-            <div className="bg-white p-4 rounded-3xl rounded-tl-none border border-black/5 flex gap-1 shadow-sm">
+            <div className="bg-surface p-4 rounded-3xl rounded-tl-none border border-black/5 flex gap-1 shadow-sm">
               <span className="w-1.5 h-1.5 bg-gold rounded-full animate-bounce"></span>
               <span className="w-1.5 h-1.5 bg-gold rounded-full animate-bounce [animation-delay:0.2s]"></span>
               <span className="w-1.5 h-1.5 bg-gold rounded-full animate-bounce [animation-delay:0.4s]"></span>

@@ -9,12 +9,13 @@ const NotificationSettings = () => {
     fajr: false,
     dhuhr: false,
     asr: false,
-    maghrib: false, // ✅ FIX 1: maghrib was missing from initial state entirely
+    maghrib: false,
     isha: false,
     quran_remind: false,
     qadr_remind: false,
     adhan_voice: false,
     salawat: false,
+    auto_dark_mode: true, // ✅ الوضع الليلي التلقائي
     adhan_voice_type: 'makkah',
     salawat_interval: 60,
     salawat_text: 'اللهم صلِّ وسلم على نبينا محمد',
@@ -242,7 +243,7 @@ const NotificationSettings = () => {
         <h2 className="text-xl font-bold text-gold font-scheherazade">🔔 إعدادات التنبيهات</h2>
       </div>
 
-      <div className="bg-black/5 border border-black/10 rounded-2xl divide-y divide-white/5 overflow-hidden">
+      <div className="bg-surface/50 border border-black/10 dark:border-white/10 rounded-2xl divide-y divide-white/5 overflow-hidden">
         {rows.map((row) => (
           <React.Fragment key={row.key}>
             <div className="flex justify-between items-center p-4 hover:bg-black/5 transition-colors">
@@ -253,7 +254,7 @@ const NotificationSettings = () => {
                   }`}
               >
                 <div
-                  className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 ${settings[row.key] ? 'right-1' : 'left-1'  // ✅ FIX 10: 'right-7' was wrong — thumb went off-screen when OFF
+                  className={`absolute top-1 w-4 h-4 bg-surface dark:bg-gray-200 rounded-full transition-all duration-300 ${settings[row.key] ? 'right-1' : 'left-1'  // ✅ FIX 10: 'right-7' was wrong — thumb went off-screen when OFF
                     }`}
                 />
               </button>
@@ -284,7 +285,7 @@ const NotificationSettings = () => {
                           );
                         }
                       }}
-                      className="flex-1 bg-black/40 border border-gold/20 rounded-lg p-2 text-sm text-ivory outline-none"
+                      className="flex-1 bg-surface border border-gold/20 rounded-lg p-2 text-sm text-text-dark outline-none"
                     >
                       <option value="makkah">أذان مكة المكرمة</option>
                       <option value="madinah">أذان المدينة المنورة</option>
@@ -316,7 +317,7 @@ const NotificationSettings = () => {
                       name="salawat_interval"
                       value={settings.salawat_interval}
                       onChange={handleSalawatChange}
-                      className="bg-black/40 border border-gold/20 rounded-lg p-2 text-sm text-ivory outline-none"
+                      className="bg-surface border border-gold/20 rounded-lg p-2 text-sm text-text-dark outline-none"
                     >
                       <option value="30">كل ٣٠ دقيقة</option>
                       <option value="60">كل ساعة</option>
@@ -332,7 +333,7 @@ const NotificationSettings = () => {
                         value={settings.salawat_text}
                         onChange={handleSalawatChange}
                         placeholder="نص التذكير..."
-                        className="flex-1 bg-black/40 border border-gold/20 rounded-lg p-2 text-sm text-ivory outline-none text-right"
+                        className="flex-1 bg-surface border border-gold/20 rounded-lg p-2 text-sm text-text-dark outline-none text-right placeholder:text-text-mid/30"
                       />
                       <button
                         onClick={previewSalawat}
@@ -350,7 +351,7 @@ const NotificationSettings = () => {
                         }`}
                     >
                       <div
-                        className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all duration-300 ${settings.salawat_sound ? 'right-0.5' : 'left-0.5' // ✅ FIX 10 (same): fix toggle thumb
+                        className={`absolute top-0.5 w-4 h-4 bg-surface dark:bg-gray-200 rounded-full transition-all duration-300 ${settings.salawat_sound ? 'right-0.5' : 'left-0.5' // ✅ FIX 10 (same): fix toggle thumb
                           }`}
                       />
                     </button>

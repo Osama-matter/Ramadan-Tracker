@@ -52,7 +52,7 @@ const TafsirSection = () => {
         <p className="text-text-mid text-sm font-amiri">تدبر آيات الله ومعانيها</p>
       </div>
 
-      <div className="bg-white/5 border border-black/10 rounded-[2rem] p-6 shadow-xl backdrop-blur-sm mx-2">
+      <div className="bg-surface/50 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-[2rem] p-6 shadow-xl backdrop-blur-sm mx-2">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <div className="space-y-2">
             <label className="text-xs text-gold-dark font-bold px-2 block">اختر السورة</label>

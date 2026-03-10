@@ -54,32 +54,29 @@ const FatawaFAQ = () => {
 
       <div className="space-y-3 px-2">
         {FAQS.map((faq, index) => (
-          <div 
+          <div
             key={index}
-            className={`border rounded-2xl overflow-hidden transition-all duration-300 ${
-              activeIndex === index 
-                ? 'bg-white shadow-lg border-gold/30' 
-                : 'bg-white/40 border-black/5 hover:bg-white/60'
-            }`}
+            className={`border rounded-2xl overflow-hidden transition-all duration-300 ${activeIndex === index
+                ? 'bg-surface shadow-lg border-gold/30'
+                : 'bg-surface/40 border-black/5 hover:bg-surface/60'
+              }`}
           >
-            <button 
+            <button
               onClick={() => setActiveIndex(activeIndex === index ? null : index)}
               className="w-full p-5 text-right flex items-center justify-between gap-4"
             >
               <span className={`font-bold font-tajawal text-sm leading-relaxed transition-colors ${activeIndex === index ? 'text-gold-dark' : 'text-text-dark'}`}>
                 {faq.question}
               </span>
-              <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
-                activeIndex === index ? 'bg-gold text-green-main rotate-180' : 'bg-black/5 text-gold'
-              }`}>
+              <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${activeIndex === index ? 'bg-gold text-green-main rotate-180' : 'bg-black/5 text-gold'
+                }`}>
                 <span className="text-[10px]">▼</span>
               </div>
             </button>
-            
-            <div 
-              className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                activeIndex === index ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
-              }`}
+
+            <div
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${activeIndex === index ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+                }`}
             >
               <div className="p-6 pt-2 text-text-dark font-amiri text-lg leading-loose bg-gold/5 border-t border-gold/10">
                 {faq.answer}
